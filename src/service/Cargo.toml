@@ -1,0 +1,15 @@
+[package]
+name = "rfv-service"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+license-file = "../../LICENSE"
+
+[dependencies]
+rfv-ipc = { path = "../ipc" }
+rfv-core = { path = "../core" }
+
+[[bin]]
+name = "rfvd"
+path = "main.rs"

@@ -1,0 +1,10 @@
+/target/
+/.tools/
+/research/reference/
+*.sock
+*.log
+__pycache__/
+/tests/hardware/captures/
+*.pcap
+*.pcapng
+/.cache/

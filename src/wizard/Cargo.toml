@@ -1,0 +1,15 @@
+[package]
+name = "rfv-wizard"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+license-file = "../../LICENSE"
+
+[dependencies]
+rfv-ipc = { path = "../ipc" }
+rfv-hal = { path = "../hal" }
+
+[[bin]]
+name = "rfv"
+path = "main.rs"

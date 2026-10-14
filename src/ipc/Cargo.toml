@@ -1,0 +1,12 @@
+[package]
+name = "rfv-ipc"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+license-file = "../../LICENSE"
+
+[dependencies]
+
+[lib]
+path = "lib.rs"

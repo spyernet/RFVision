@@ -1,0 +1,13 @@
+RFVision proprietary components — All rights reserved.
+
+No permission to use, copy, modify, sublicense, or redistribute the original
+RFVision components is granted by this notice. An appropriate separate written
+licence from the rights holder is required. Ownership, commercial terms, and
+contributor agreements must be confirmed by the project owner and legal counsel
+before release. This notice is not a determination of ownership.
+
+SCOPE: This notice applies only to original RFVision work. It does NOT apply to
+drv/rtw88/, Linux, firmware, independently installed utilities, toolchains, or
+other third-party material. Their own licences and notices continue to apply.
+See LICENSING.md and docs/licensing/inventory.tsv. No third-party rights are
+restricted or relicensed by this file. Distribution clearance is pending.

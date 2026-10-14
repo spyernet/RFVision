@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+members = ["src/ipc", "src/hal", "src/core", "src/service", "src/wizard", "src/drv/rtw88"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+license-file = "../../LICENSE"
+publish = false
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

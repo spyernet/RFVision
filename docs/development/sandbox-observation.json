@@ -1,0 +1,86 @@
+{
+  "environment": "actual sandbox; no Wi-Fi device; not a hardware test",
+  "date": "2026-10-14",
+  "results": [
+    {
+      "command": [
+        "rfv",
+        "discover"
+      ],
+      "exit_code": 0,
+      "records": [
+        {
+          "device_count": "0",
+          "kernel": "6.1.158+",
+          "kind": "host",
+          "scope": "wireless network interfaces visible in this namespace"
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "command": [
+        "rfv",
+        "report",
+        "/home/user/RFVision/.tools/runtime/core.sock"
+      ],
+      "exit_code": 0,
+      "records": [
+        {
+          "device_count": "0",
+          "kind": "adapter",
+          "mode": "passive_public_interfaces",
+          "name": "rfv-adapter-rtw88",
+          "version": "0.1.0"
+        },
+        {
+          "calibration": "not_applied",
+          "csi_reconstruction": "not_performed",
+          "kind": "processing",
+          "measurements": "0",
+          "safety": "read_only_no_driver_changes",
+          "version": "0.1.0"
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "command": [
+        "rfv",
+        "wizard",
+        "validate",
+        "/home/user/RFVision/.tools/runtime/core.sock"
+      ],
+      "exit_code": 2,
+      "records": [
+        {
+          "device_count": "0",
+          "kind": "adapter",
+          "mode": "passive_public_interfaces",
+          "name": "rfv-adapter-rtw88",
+          "version": "0.1.0"
+        },
+        {
+          "calibration": "not_applied",
+          "csi_reconstruction": "not_performed",
+          "kind": "processing",
+          "measurements": "0",
+          "safety": "read_only_no_driver_changes",
+          "version": "0.1.0"
+        },
+        {
+          "csi": "NOT_ACQUIRED",
+          "driver_changes": "none",
+          "interfaces_with_measurements": "0",
+          "internet_connectivity": "NOT_TESTED; no active probes sent",
+          "ipc": "passed",
+          "kind": "validation",
+          "observed_netdev_state": "NO_WIFI_DEVICE",
+          "physical_rf_accuracy": "NOT_TESTED",
+          "result": "INCOMPLETE_OR_FAILED"
+        }
+      ],
+      "stderr": ""
+    }
+  ]
+}

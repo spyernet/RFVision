@@ -1,0 +1,13 @@
+component	version_or_reference	use	declared_or_expected_license	distributed_by_package_tool	review_status
+RFVision six local Rust crates	0.1.0	core/IPC/HAL/service/adapter/wizard	Proprietary reserved rights	binaries only	Owner attribution and commercial terms pending
+Supplied rtw88 source	Linux 4056b3c9d3c92ea45955641dbafeb9b960e146ef exact 98-file match	research input; no build/link	97 files GPL-2.0 OR BSD-3-Clause; Kconfig GPL-2.0-only	no	Per-file manifest recorded; complete redistribution/legal review pending
+Linux kernel	host-dependent	independently installed OS	GPL-2.0-only plus per-file exceptions/notices	no	No kernel code linked into RFVision implementation; OS interface review pending
+nl80211 UAPI header	Linux 4056b3c9d3c92ea45955641dbafeb9b960e146ef	reference only; no copied header	ISC-style permission text in inspected file	no	Future native netlink implementation requires header-by-header audit
+iw	distribution-supplied optional; absent in sandbox	external read-only CLI	Expected ISC; verify exact package and dependencies	no	Target-package notice/version audit pending
+ethtool	distribution-supplied optional; absent in sandbox	external read-only CLI	Expected GPL-2.0 family; verify exact package	no	Target-package notice/version and interaction review pending
+RTL8821C firmware	rtw88/rtw8821c_fw.bin; binary not supplied	already installed firmware accessed by driver	Unknown from supplied input	no	Firmware licence/provenance/version unresolved
+Rust compiler/stdlib	1.88.0 tested	build and standard-library runtime	MIT OR Apache-2.0; included third-party licences	stdlib linked in binaries	Target toolchain notices and binary SBOM required
+libc/libgcc_s	target-platform dependent	dynamic platform runtime	Typically LGPL-2.1-or-later; GPL-3.0-or-later WITH GCC-exception-3.1 respectively; verify target	not bundled	Inspect actual target links and notice obligations
+Python	3.11 tested	development tests/audit/package/client examples	PSF and included component licences	no	Not an RFVision binary runtime requirement
+npm @rustbin toolchain packages	rustc/std 1.88.0; cargo package 0.89.0; rustfmt 1.8.0; clippy 0.1.88	ignored sandbox tooling only	Package MIT labels do not replace bundled upstream licences	no	Unofficial repack provenance; rebuild using approved verified toolchain
+External CSI research	Nexmon 1232edf2; csitool ae0db3aa	documentary references only	Not imported; review before any future code reuse	no	No code or firmware reused

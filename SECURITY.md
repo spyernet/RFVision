@@ -62,3 +62,29 @@ a private reporting channel and signed release process before distribution.
 Do not post credentials, personal packet captures or exploitable environment
 secrets in a public issue. Distribution is blocked pending the legal and hardware
 release gates, not merely successful software tests.
+
+## Dashboard and recordings
+
+The opt-in `rfv ui` listener binds 0.0.0.0 and serves public static HTML, but
+requires a 32..256-character generated token for all APIs. Use a private network
+or HTTPS reverse proxy and firewall; do not expose raw HTTP to untrusted networks.
+The browser keeps the token in memory only, sends it in Authorization headers and
+never needs another localhost service. No CORS allowlist exemption is enabled.
+No token is logged or shipped in HTML. Inline script/style CSP is used for the
+embedded page; data are rendered with textContent, not HTML concatenation.
+
+The research gateway is single-threaded, has per-read/write timeouts rather than
+absolute deadlines, and is not DoS hardened. Put rate limits/absolute deadlines
+at a trusted proxy for remote use. Same-user processes/root can already access
+the private Unix sockets and process environment; this is not a multi-tenant
+security boundary. Body/header/import/capture sizes and history counts are bounded.
+No arbitrary file reads, shell strings, active scans, txpower/channel setters or
+vendor management endpoints are exposed. Imported provenance is not authenticated.
+
+Recordings reveal identifiers, network relationships and positions. CLI new files
+use mode 0600 and refuse overwrite; browser downloads follow browser/OS download
+permissions and are NOT guaranteed mode 0600. Store both in private locations.
+Browser and CSI imports are labelled replay/unverified or simulation; never use
+an imported label as cryptographic proof of hardware origin. Raw CSI input must
+come from documented authorized captures. Ignore `.rfv` recordings in Git and
+keep browser JSON/CSI TSV captures outside the repository.

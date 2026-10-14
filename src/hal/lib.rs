@@ -7,7 +7,9 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 pub mod command;
+pub mod environment;
 pub mod measurement;
+pub mod research;
 
 #[derive(Debug, Clone)]
 pub struct Device {

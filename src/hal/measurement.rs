@@ -10,6 +10,11 @@ fn measurement(
 ) -> Record {
     record(&[
         ("kind", "measurement"),
+        ("source_driver", &d.driver),
+        ("measurement_type", "scalar"),
+        ("validity", "valid"),
+        ("calibration", "not_applied"),
+        ("capability_status", "observed"),
         ("interface", &d.interface),
         ("device_id", &d.identity),
         ("name", name),
@@ -163,8 +168,36 @@ pub fn parse_station(d: &Device, text: &str, time: &str) -> Vec<Record> {
 pub fn parse_info(d: &Device, text: &str, time: &str) -> Vec<Record> {
     let mut out = Vec::new();
     for line in text.lines().map(str::trim) {
+        if let Some(v) = line
+            .strip_prefix("txpower ")
+            .and_then(|s| s.strip_suffix(" dBm"))
+            .and_then(|s| s.parse::<f64>().ok())
+            .filter(|v| v.is_finite() && (-100. ..=100.).contains(v))
+        {
+            let mut r = measurement(d, "configured_tx_power", v, "dBm", "iw.interface", time);
+            r.insert(
+                "basis".into(),
+                "configured_not_measured_radiated_power".into(),
+            );
+            out.push(r);
+        }
         if !line.starts_with("channel ") {
             continue;
+        }
+        if let Some(channel) = line
+            .split_whitespace()
+            .nth(1)
+            .and_then(|s| s.parse::<u16>().ok())
+            .filter(|n| *n > 0 && *n <= 233)
+        {
+            out.push(measurement(
+                d,
+                "channel",
+                channel,
+                "index_or_count",
+                "iw.interface",
+                time,
+            ));
         }
         if let Some((_, tail)) = line.split_once('(') {
             if tail.contains(" MHz)") {
@@ -319,13 +352,16 @@ pub fn collect(root: &Path, d: &Device) -> io::Result<Vec<Record>> {
         .filter(|s| s.starts_with("phy") && s[3..].bytes().all(|b| b.is_ascii_digit()))
     {
         match command::run("iw", &["phy", phy, "info"]) {
-            Ok(text) if text.len() <= 65536 => out.push(record(&[
-                ("kind", "wiphy"),
-                ("interface", &d.interface),
-                ("source", "iw.phy"),
-                ("evidence", "driver_advertised_not_physical_validation"),
-                ("raw", &text),
-            ])),
+            Ok(text) if text.len() <= 65536 => {
+                out.extend(crate::environment::power_limits(d, &text, &now_ns()));
+                out.push(record(&[
+                    ("kind", "wiphy"),
+                    ("interface", &d.interface),
+                    ("source", "iw.phy"),
+                    ("evidence", "driver_advertised_not_physical_validation"),
+                    ("raw", &text),
+                ]));
+            }
             Ok(_) => out.push(diagnostic(
                 &d.interface,
                 "OUTPUT_LIMIT",
@@ -337,6 +373,24 @@ pub fn collect(root: &Path, d: &Device) -> io::Result<Vec<Record>> {
                 &format!("iw phy: {e}"),
             )),
         }
+    }
+    match command::run("iw", &["dev", &d.interface, "scan", "dump"]) {
+        Ok(text) => {
+            let networks = crate::environment::cached_networks(d, &text, &now_ns());
+            if networks.is_empty() {
+                out.push(diagnostic(
+                    &d.interface,
+                    "SCAN_CACHE_EMPTY",
+                    "No cached networks; no scan was triggered",
+                ));
+            }
+            out.extend(networks);
+        }
+        Err(e) => out.push(diagnostic(
+            &d.interface,
+            "SCAN_CACHE_UNAVAILABLE",
+            &e.to_string(),
+        )),
     }
     match command::run("ethtool", &["-i", &d.interface]) {
         Ok(text) => {
@@ -430,7 +484,7 @@ mod tests {
                 "1"
             )
             .len(),
-            2
+            3
         );
         let r = parse_survey(
             &device(),
@@ -439,5 +493,23 @@ mod tests {
         );
         assert_eq!(r.len(), 2);
         assert_eq!(r[0]["frequency_mhz"], "5180");
+    }
+}
+
+#[cfg(test)]
+mod power_tests {
+    use super::*;
+    #[test]
+    fn configuration_is_not_radiated_measurement() {
+        let d = Device {
+            interface: "test0".into(),
+            identity: "algorithm_fixture".into(),
+            driver: "fixture".into(),
+            fields: Record::new(),
+        };
+        let rows = parse_info(&d, "txpower 18.00 dBm", "1");
+        assert_eq!(rows[0]["name"], "configured_tx_power");
+        assert_eq!(rows[0]["basis"], "configured_not_measured_radiated_power");
+        assert!(parse_info(&d, "txpower NaN dBm", "1").is_empty());
     }
 }

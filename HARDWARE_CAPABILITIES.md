@@ -64,3 +64,23 @@ advertised by the device, and baseline connectivity. Run the non-invasive
 hardware procedure under `tests/hardware/README.md`. Preserve raw diagnostic
 outputs with privacy controls. Compare to independent instruments for RF
 accuracy; software test success cannot substitute for this.
+
+## Integrated RF workspace additions
+
+- Configured transmit power is read from `iw dev … info`, not measured at an RF
+  connector/antenna. Per-channel ceilings/disabled state/constraints are parsed
+  from `iw phy … info`. No minimum/settable range or regulatory authorization is
+  inferred; constraints can change dynamically.
+- Cached BSS signal/frequency/SSID/BSSID and optional last-seen are available only
+  if `iw dev … scan dump` returns them. No scan trigger, automatic repeater role,
+  mesh compatibility or AP control is implemented.
+- CSI hardware/firmware remain unverified. `csi_assessment=CSI_DRIVER_LIMITED`
+  identifies the unavailable **RFVision standard userspace path**, not a claim
+  that only a driver change is needed. Installed source equivalence is unknown.
+- Offline complex imports, RF link-budget predictions and algorithm tests are
+  **not hardware capabilities** and cannot promote live availability.
+- Station RSSI/rate/MCS and interface bandwidth remain low-rate driver snapshots;
+  per-packet RSSI/radiotap capture is still not implemented. EVM/SNR/CFO, actual
+  subcarrier amplitude/phase and CSI are not acquired from the RTL8821CE.
+
+Validation and scope: [RF workspace hardware report](docs/rf/HARDWARE_VALIDATION.md).

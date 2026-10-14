@@ -24,7 +24,7 @@ pub struct CsiFrame {
 }
 impl CsiFrame {
     pub fn validate(&self) -> Result<(), String> {
-        if self.device_id.is_empty() || self.source.is_empty() {
+        if self.device_id.trim().is_empty() || self.source.trim().is_empty() {
             return Err("missing provenance".into());
         }
         if self.rx_chains == 0
@@ -56,7 +56,12 @@ impl CsiFrame {
         }) {
             return Err("non-finite IQ/amplitude".into());
         }
-        if self.hardware_timestamp.is_some() != self.timestamp_unit.is_some() {
+        if self.hardware_timestamp.is_some() != self.timestamp_unit.is_some()
+            || self
+                .timestamp_unit
+                .as_ref()
+                .is_some_and(|u| u.trim().is_empty())
+        {
             return Err("timestamp requires units".into());
         }
         Ok(())
@@ -116,5 +121,130 @@ mod tests {
         c = fixture();
         c.iq[0].re = f32::NAN;
         assert!(c.validate().is_err());
+    }
+}
+
+/// Unwrap and remove least-squares constant/linear phase per contiguous valid
+/// segment and stream. This removes real channel slope too: NOT propagation
+/// calibration. Unknown phase (zero IQ) and missing subcarriers break segments.
+pub fn sanitize_phase(indices: &[i16], phases: &[Option<f64>]) -> Result<Vec<Option<f64>>, String> {
+    if indices.len() != phases.len()
+        || indices.windows(2).any(|w| w[0] >= w[1])
+        || phases
+            .iter()
+            .flatten()
+            .any(|p| !p.is_finite() || p.abs() > std::f64::consts::PI)
+    {
+        return Err("invalid phase inputs".into());
+    }
+    let mut out = vec![None; phases.len()];
+    let mut start = 0;
+    while start < phases.len() {
+        if phases[start].is_none() {
+            start += 1;
+            continue;
+        }
+        let mut end = start + 1;
+        while end < phases.len()
+            && phases[end].is_some()
+            && i32::from(indices[end]) - i32::from(indices[end - 1]) == 1
+        {
+            end += 1;
+        }
+        let mut unwrapped = Vec::new();
+        let mut previous = phases[start].unwrap();
+        unwrapped.push(previous);
+        for p in &phases[start + 1..end] {
+            let raw = p.unwrap();
+            let delta = (raw - previous + std::f64::consts::PI).rem_euclid(std::f64::consts::TAU)
+                - std::f64::consts::PI;
+            previous += delta;
+            unwrapped.push(previous);
+        }
+        // Fewer than three bins cannot leave a meaningful detrended residual.
+        if end - start >= 3 {
+            let n = (end - start) as f64;
+            let xm = indices[start..end]
+                .iter()
+                .map(|x| f64::from(*x))
+                .sum::<f64>()
+                / n;
+            let ym = unwrapped.iter().sum::<f64>() / n;
+            let slope = indices[start..end]
+                .iter()
+                .zip(&unwrapped)
+                .map(|(x, y)| (f64::from(*x) - xm) * (y - ym))
+                .sum::<f64>()
+                / indices[start..end]
+                    .iter()
+                    .map(|x| (f64::from(*x) - xm).powi(2))
+                    .sum::<f64>();
+            for (j, y) in unwrapped.iter().enumerate() {
+                out[start + j] = Some(y - ym - slope * (f64::from(indices[start + j]) - xm));
+            }
+        }
+        start = end;
+    }
+    Ok(out)
+}
+/// Apply externally established per-bin phase offsets without inventing a
+/// calibration. Caller must retain reference/method/date in capture metadata.
+pub fn correct_phase(
+    phases: &[Option<f64>],
+    offsets: &[f64],
+    calibration_source: &str,
+) -> Result<Vec<Option<f64>>, String> {
+    if calibration_source.trim().is_empty()
+        || phases.len() != offsets.len()
+        || offsets.iter().any(|v| !v.is_finite())
+        || phases.iter().flatten().any(|v| !v.is_finite())
+    {
+        return Err("invalid calibration".into());
+    }
+    Ok(phases
+        .iter()
+        .zip(offsets)
+        .map(|(p, o)| {
+            p.map(|p| {
+                (p.rem_euclid(std::f64::consts::TAU) - o.rem_euclid(std::f64::consts::TAU)
+                    + std::f64::consts::PI)
+                    .rem_euclid(std::f64::consts::TAU)
+                    - std::f64::consts::PI
+            })
+        })
+        .collect())
+}
+#[cfg(test)]
+mod phase_tests {
+    use super::*;
+    #[test]
+    fn unwrap_slope_and_unknown() {
+        let p = sanitize_phase(
+            &[1, 2, 3, 4],
+            &[Some(3.), Some(-3.), Some(-2.716814692820414), None],
+        )
+        .unwrap();
+        assert!(p[..3].iter().all(|p| p.unwrap().abs() < 1e-10));
+        assert_eq!(p[3], None);
+        assert_eq!(
+            sanitize_phase(&[1, 3, 5], &[Some(1.); 3]).unwrap(),
+            vec![None; 3]
+        );
+    }
+    #[test]
+    fn calibration_requires_provenance() {
+        assert!(correct_phase(&[Some(1.)], &[0.2], "").is_err());
+        assert!(
+            (correct_phase(
+                &[Some(1.), None],
+                &[0.2, 0.],
+                "reference instrument 2026-10-14"
+            )
+            .unwrap()[0]
+                .unwrap()
+                - 0.8)
+                .abs()
+                < 1e-10
+        );
     }
 }

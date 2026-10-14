@@ -26,6 +26,7 @@ pub fn run(name: &str, args: &[&str]) -> io::Result<String> {
         ("iw", ["dev", interface, "info"])
         | ("iw", ["dev", interface, "station", "dump"])
         | ("iw", ["dev", interface, "survey", "dump"])
+        | ("iw", ["dev", interface, "scan", "dump"])
         | ("ethtool", ["-i", interface]) => super::valid_interface(interface),
         ("iw", ["phy", phy, "info"]) => phy
             .strip_prefix("phy")

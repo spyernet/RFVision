@@ -102,3 +102,52 @@ No reader should block the Wi-Fi RX path. Authenticate descriptor ownership,
 reject untrusted lengths, benchmark against batched socket I/O, and document
 loss accounting before claiming zero-copy/high-rate support. Current v1 rejects
 unknown opcodes; it never attempts to interpret proposed ring descriptors.
+
+## RF workspace additive records and recording contracts
+
+Wire framing/opcodes remain RFV/1.0: no live CSI opcode or driver-specific payload
+has been introduced. DISCOVER may include `csi_assessment`. SAMPLE may include
+`network` (existing BSS cache), `power_limit`, extended scalar measurement
+provenance and core `recommendation` records. See HAL for individual fields.
+Clients must continue ignoring unknown record kinds/fields. Recommendations
+include code, evidence, action, heuristic confidence and `automatic_changes=never`.
+Scalar CSI names remain rejected; IQ cannot be smuggled through scalar values.
+
+Core session state is bounded (16 previous interface batches; 10,000 coverage
+observations); access is serialized to preserve acquisition/processing order.
+This can delay concurrent callers: it is not a high-rate streaming service.
+
+CLI `RFVREC1` files start with the eight bytes `RFVREC1\n`, followed by ordinary
+RFV/1 SAMPLE response frames with strictly increasing positive IDs. Each frame
+retains original device/source/quality/timestamp metadata. Optional `position`
+records attach an explicit user position to that batch's interface (reference,
+label, x_m, y_m, source). No position is inferred from IP/MAC/interface identity.
+Limits: 64 MiB/file, 10,000 frames, existing RFV field/frame limits. New files are
+mode 0600; no overwrite. Replay rejects wrong magic/kind/flags/order, truncation,
+nonfinite scalars, missing provenance and orphan measurements. Files are not
+signed; provenance remains a producer assertion. A crash-truncated final frame
+is an error. Complete-prefix recovery is not performed automatically.
+
+RFVCSI/1 is a **separate offline text format**, specified in
+[CSI_FORMAT](docs/rf/CSI_FORMAT.md); it does not claim live acquisition support.
+Browser JSON `RFV-BROWSER-1` is also separate, bounded and labelled replay.
+
+### HTTP presentation gateway
+
+`rfv ui` proxies fixed relative same-origin endpoints through the existing private
+Unix core socket. Browser code never addresses localhost to reach another
+service. All APIs require `Authorization: Bearer RFV_UI_TOKEN`; no CORS grant.
+
+- GET `/api/report`, GET or POST `/api/sample`: RFV discovery/sample. Optional
+  sample POST body is position TSV: reference, label, x_m, y_m, source.
+- GET `/api/coverage`: gateway-session located/unlocated summaries; not persistent.
+- POST `/api/budget`, `/api/range`, `/api/csi`: bounded offline text inputs,
+  Rust validation/analysis; no network reconfiguration.
+
+Only GET `/` is public static HTML. Token is not inserted in HTML or URLs.
+Responses use JSON string scalars and no-store caching. No arbitrary path, shell,
+file-upload-to-disk or radio setting endpoint exists. HTTP headers ≤8 KiB, body
+≤4 MiB, 5-second per-read and 15-second per-write timeouts; requests close after
+one response. These are not absolute HTTP transaction deadlines. The gateway is
+single-client/serialized; use a trusted HTTPS proxy with absolute deadlines and
+rate limits for remote operation. See SECURITY.md.

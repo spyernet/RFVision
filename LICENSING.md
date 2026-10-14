@@ -86,3 +86,19 @@ The development sandbox's Rust tools were npm `@rustbin` repackages of Rust
 They are ignored development artifacts, not runtime dependencies. Rebuild with
 an organization-approved, integrity-verified official toolchain before releasing
 binaries; npm package labels do not constitute upstream signature verification.
+
+## RF workspace extension review (2026-10-14)
+
+New Rust analysis, HAL parsers and embedded HTML/JavaScript are original RFVision
+implementation under the repository's existing reserved-rights terms. No driver
+code or firmware was modified, copied into Core, linked, or redistributed as a
+new binary. All 98 supplied source files retain their original licenses and hashes.
+No third-party runtime Cargo/npm dependency, UI font, CDN asset or CSI capture
+was added. Ignored development toolchains/browser test tools are not deliverables
+or distribution inputs. Package/release licensing gates still apply.
+
+A future hardware CSI adapter, firmware modification, driver derivative or
+redistributed research-tool capture converter needs its own legal review and
+complete relevant notices/source/license compliance. Process/IPC separation alone
+does **not** guarantee GPL independence. Do not treat this implementation as
+clearance to distribute modified drivers, proprietary firmware or derived code.

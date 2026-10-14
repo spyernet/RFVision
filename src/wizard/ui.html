@@ -1,0 +1,1616 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>RFVision · RF workspace</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0c1117;
+        --panel: #141c25;
+        --line: #293440;
+        --ink: #e3ecf5;
+        --muted: #92a4b6;
+        --accent: #67dfc1;
+        --warn: #f5bd70;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          14px/1.5 system-ui,
+          sans-serif;
+      }
+      aside {
+        width: 228px;
+        position: fixed;
+        inset: 0 auto 0 0;
+        background: #101820;
+        border-right: 1px solid var(--line);
+        padding: 30px 18px;
+        display: flex;
+        flex-direction: column;
+      }
+      h1 {
+        font-size: 27px;
+        letter-spacing: -1px;
+        margin: 0 0 5px;
+      }
+      h2 {
+        font-size: 22px;
+        font-weight: 550;
+      }
+      h3 {
+        font-size: 15px;
+        font-weight: 550;
+        margin: 0 0 16px;
+      }
+      p {
+        color: var(--muted);
+      }
+      .brand {
+        font-size: 23px;
+        letter-spacing: -1px;
+        font-weight: 750;
+        padding: 0 12px;
+      }
+      .brand span {
+        color: var(--accent);
+      }
+      .eyebrow {
+        font:
+          10px ui-monospace,
+          monospace;
+        letter-spacing: 2px;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin: 6px 12px 30px;
+      }
+      nav button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: none;
+        border: 0;
+        color: var(--muted);
+        padding: 12px 15px;
+        margin: 3px 0;
+        border-radius: 7px;
+      }
+      nav button.active {
+        background: #213932;
+        color: var(--accent);
+      }
+      nav button:hover {
+        color: white;
+      }
+      button {
+        cursor: pointer;
+        background: var(--accent);
+        border: 1px solid transparent;
+        color: #10251f;
+        padding: 9px 15px;
+        font: inherit;
+        border-radius: 6px;
+        font-weight: 600;
+      }
+      button.secondary {
+        background: #202c38;
+        color: var(--ink);
+        border-color: var(--line);
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: wait;
+      }
+      .bottom {
+        margin-top: auto;
+        font-size: 11px;
+        color: var(--muted);
+        padding: 15px;
+      }
+      main {
+        margin-left: 228px;
+        padding: 30px 38px;
+        max-width: 1600px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 23px;
+        margin-bottom: 28px;
+      }
+      .status,
+      .tag {
+        display: inline-block;
+        font:
+          11px ui-monospace,
+          monospace;
+        border: 1px solid var(--line);
+        padding: 5px 10px;
+        border-radius: 20px;
+        color: var(--accent);
+      }
+      .status.off {
+        color: var(--warn);
+      }
+      .connection {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin: 22px 0;
+      }
+      .two {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 18px;
+        margin: 20px 0;
+      }
+      .panel,
+      .metric {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 22px;
+        min-width: 0;
+      }
+      .metric .label {
+        font-size: 11px;
+        color: var(--muted);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+      .metric .value {
+        font-size: 32px;
+        letter-spacing: -1px;
+        margin: 12px 0 3px;
+      }
+      .metric small {
+        color: var(--muted);
+      }
+      .notice {
+        border-left: 3px solid var(--warn);
+        padding: 12px 18px;
+        background: #211e18;
+        color: #dbc7a8;
+        margin: 18px 0;
+      }
+      .empty {
+        padding: 50px 20px;
+        text-align: center;
+        color: var(--muted);
+        border: 1px dashed var(--line);
+        border-radius: 8px;
+      }
+      .hint {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      th {
+        text-align: left;
+        color: var(--muted);
+        font-weight: 500;
+      }
+      td,
+      th {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        word-break: break-word;
+      }
+      td {
+        font-family: ui-monospace, monospace;
+      }
+      .scroll {
+        overflow: auto;
+        max-height: 420px;
+      }
+      input,
+      select,
+      textarea {
+        background: #0e151d;
+        color: var(--ink);
+        border: 1px solid #34424f;
+        border-radius: 5px;
+        padding: 9px;
+        font: inherit;
+        max-width: 100%;
+      }
+      input[type="password"] {
+        width: 190px;
+      }
+      input[type="number"] {
+        width: 100px;
+      }
+      label {
+        font-size: 12px;
+        color: var(--muted);
+        display: inline-flex;
+        flex-direction: column;
+        gap: 6px;
+        margin: 6px 8px 6px 0;
+      }
+      textarea {
+        width: 100%;
+        min-height: 145px;
+        font:
+          12px/1.8 ui-monospace,
+          monospace;
+        white-space: pre;
+      }
+      canvas {
+        width: 100%;
+        height: 260px;
+        display: block;
+      }
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin: 15px 0;
+      }
+      .recommendation {
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        margin: 12px 0;
+      }
+      .recommendation b {
+        color: var(--warn);
+      }
+      .recommendation p {
+        margin-bottom: 0;
+      }
+      .hidden {
+        display: none !important;
+      }
+      #error {
+        color: #ffc3a3;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      #budgetOutput td {
+        color: var(--warn);
+      }
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
+      }
+      a {
+        color: var(--accent);
+      }
+      .footer {
+        margin: 26px 0;
+        color: var(--muted);
+        font-size: 11px;
+      }
+      #budgetFields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .budgetRow {
+        border: 1px solid var(--line);
+        padding: 12px;
+        border-radius: 6px;
+      }
+      .budgetRow input[type="text"] {
+        width: 190px;
+      }
+      .legend {
+        display: flex;
+        gap: 15px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .legend i {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background: var(--accent);
+        border-radius: 50%;
+        margin-right: 5px;
+      }
+      @media (max-width: 1000px) {
+        aside {
+          width: 185px;
+        }
+        main {
+          margin-left: 185px;
+          padding: 20px;
+        }
+        .grid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .two {
+          grid-template-columns: 1fr;
+        }
+        header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+      @media (max-width: 650px) {
+        aside {
+          position: static;
+          width: 100%;
+          padding: 16px;
+        }
+        .brand {
+          padding: 0;
+        }
+        aside .eyebrow,
+        aside .bottom {
+          display: none;
+        }
+        nav {
+          display: flex;
+          overflow: auto;
+          margin-top: 10px;
+        }
+        nav button {
+          width: auto;
+          white-space: nowrap;
+        }
+        main {
+          margin: 0;
+          padding: 17px;
+        }
+        .grid,
+        #budgetFields {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <aside>
+      <div class="brand">◉ RF<span>Vision</span></div>
+      <div class="eyebrow">RF research workspace</div>
+      <nav id="nav"></nav>
+      <div class="bottom">
+        <span class="tag">READ-ONLY RF</span>
+        <p>
+          No driver replacement.<br />No power-limit bypass.<br />No fabricated
+          captures.
+        </p>
+        RFVision / research build
+      </div>
+    </aside>
+    <main>
+      <header>
+        <div>
+          <div class="eyebrow" style="margin: 0 0 8px">
+            MEASURE / UNDERSTAND / COMPARE
+          </div>
+          <h1 id="title">Live Monitor</h1>
+          <span id="status" class="status off"
+            >Not connected · no measurements</span
+          >
+        </div>
+        <div class="connection">
+          <input
+            id="token"
+            type="password"
+            aria-label="Dashboard API token"
+            placeholder="Dashboard token"
+            autocomplete="off"
+          /><button id="connect">Connect</button
+          ><button class="secondary" id="pause">Start live</button>
+        </div>
+      </header>
+      <div id="error" role="alert"></div>
+      <section class="page active" id="live">
+        <p>
+          Passive observations from your existing Linux wireless driver. Missing
+          values stay unknown.
+        </p>
+        <div class="grid" id="metrics"></div>
+        <div class="two">
+          <div class="panel">
+            <h3>Signal history <span class="tag">MEASURED RSSI</span></h3>
+            <select id="link" aria-label="History link"></select
+            ><canvas id="signal"></canvas>
+            <div class="legend">
+              <span><i></i>Driver-reported dBm · uncalibrated</span
+              ><span>No interpolation across missing samples</span>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Link context</h3>
+            <div id="context"></div>
+            <p class="hint">
+              Query observation times are not per-packet receive timestamps.
+              Link rate is not throughput.
+            </p>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Available measurements</h3>
+          <div id="measurements"></div>
+        </div>
+      </section>
+      <section class="page" id="csi">
+        <p>
+          CSI Research / capability evidence and offline complex-data analysis
+        </p>
+        <div id="csiStatus"></div>
+        <div class="notice">
+          RTL8821CE live CSI acquisition is unavailable in this build. RSSI,
+          EVM, SNR and beamforming feedback names are not raw CSI.
+        </div>
+        <div class="panel">
+          <h3>Analyze an existing RFVCSI/1 capture</h3>
+          <p>
+            No sample data is bundled. Import a documented capture with its
+            source, dimensions and provenance. Imports are not
+            hardware-certified.
+          </p>
+          <input id="csiFile" type="file" accept=".tsv,.txt" />
+          <div id="csiMeta"></div>
+          <label>Imported frame<select id="csiFrame"></select></label
+          ><label>RX / TX stream<select id="csiStream"></select></label>
+          <div class="two">
+            <div>
+              <h3>Subcarrier amplitude · scaled IQ, not dBm</h3>
+              <canvas id="amplitude"></canvas>
+            </div>
+            <div>
+              <h3>Mathematical phase · radians</h3>
+              <canvas id="phase"></canvas>
+            </div>
+          </div>
+          <div id="csiStats"></div>
+          <p class="hint">
+            Phase detrending removes constant/linear phase, including real
+            propagation slope. It is not calibration, localization or imaging.
+            Temporal amplitude variance combines channel change, noise and AGC.
+          </p>
+        </div>
+      </section>
+      <section class="page" id="coverage">
+        <p>
+          RF Coverage / located point measurements, not an invented propagation
+          surface
+        </p>
+        <div class="panel">
+          <h3>Record the current measurement position</h3>
+          <p class="hint">
+            Leave disabled for unlocated signal history. Coordinates are your
+            recorded local floor-plan coordinates in metres; no GPS position is
+            inferred.
+          </p>
+          <label
+            ><span>Use recorded position</span
+            ><input type="checkbox" id="located" /></label
+          ><label
+            >Reference frame<input
+              id="reference"
+              placeholder="e.g. Ground floor" /></label
+          ><label
+            >Location label<input
+              id="location"
+              placeholder="e.g. Desk" /></label
+          ><label>X / m<input id="x" type="number" step="any" /></label
+          ><label>Y / m<input id="y" type="number" step="any" /></label
+          ><label
+            >Position source<input
+              id="positionSource"
+              placeholder="e.g. tape measurement" /></label
+          ><button id="measureHere">Measure here</button>
+        </div>
+        <div class="two">
+          <div class="panel">
+            <h3>Measured-point heatmap</h3>
+            <select id="mapGroup" aria-label="Map reference and link"></select
+            ><canvas id="map"></canvas>
+            <p class="hint">
+              Colored squares represent measured locations only. No
+              interpolation, wall model, 3D surface or confidence interval is
+              implied. Select one coordinate frame and link at a time.
+            </p>
+          </div>
+          <div class="panel">
+            <h3>Location comparison</h3>
+            <div id="coverageTable"></div>
+            <p class="hint">
+              Means and spread describe observed RSSI at each position, not RF
+              accuracy. Repeat at each location and compare the same AP/channel.
+            </p>
+          </div>
+        </div>
+      </section>
+      <section class="page" id="budget">
+        <p>
+          Link Budget / free-space prediction with explicit input provenance
+        </p>
+        <div class="notice">
+          Predicted received power is not measured RSSI. Indoor walls,
+          interference, near-field effects and fading are not modeled. This
+          calculator does not authorize transmit power.
+        </div>
+        <div class="panel">
+          <h3>Model inputs</h3>
+          <p class="hint">
+            Every value requires a source and basis. Enter zero losses only as
+            an explicit assumption. Sensitivity is optional; cite the
+            bandwidth/MCS/PER target in its source.
+          </p>
+          <div id="budgetFields"></div>
+          <button id="calculate">Calculate prediction</button>
+          <div id="budgetOutput"></div>
+        </div>
+      </section>
+      <section class="page" id="optimizer">
+        <p>
+          RF Link Optimizer / measurement-led recommendations, no automatic
+          changes
+        </p>
+        <div class="grid" id="optimizerMetrics"></div>
+        <div class="two">
+          <div class="panel">
+            <h3>Diagnostic recommendations</h3>
+            <div id="recommendations"></div>
+          </div>
+          <div class="panel">
+            <h3>Before / after comparison</h3>
+            <button id="baseline" class="secondary">
+              Pin current measurements
+            </button>
+            <div id="comparison"></div>
+            <p class="hint">
+              Comparisons require matching device, peer and channel. No
+              improvement or causality is promised; repeat measurements after
+              one supported manual change.
+            </p>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Power configuration & constraints</h3>
+          <div id="power"></div>
+          <p class="hint">
+            Driver-advertised ceilings are not full settable ranges. The minimum
+            is unknown. Regulatory, hardware, firmware, SAR and antenna/EIRP
+            constraints still apply. RFVision never issues power configuration
+            commands.
+          </p>
+        </div>
+      </section>
+      <section class="page" id="range">
+        <p>
+          Range Extenders / multiple-device planning and compatibility checks
+        </p>
+        <div class="panel">
+          <h3>Observed network cache</h3>
+          <div id="networks"></div>
+          <p class="hint">
+            No scan is triggered. Cached BSS entries may be old, incomplete or
+            unavailable; visibility does not establish mesh/repeater support.
+            “Last seen” is relative to cache query time.
+          </p>
+        </div>
+        <div class="panel" style="margin-top: 18px">
+          <h3>Register infrastructure & measurement nodes</h3>
+          <label>Node ID<input id="nodeId" placeholder="AP-west" /></label
+          ><label
+            >Role<select id="nodeRole">
+              <option>repeater</option>
+              <option>bridge</option>
+              <option>mesh</option>
+              <option>ethernet_ap</option>
+              <option>external_radio</option>
+              <option>measurement_node</option>
+            </select></label
+          ><label
+            >Backhaul<select id="nodeBackhaul">
+              <option>unknown</option>
+              <option>ethernet</option>
+              <option>wireless_shared</option>
+              <option>wireless_dedicated</option>
+            </select></label
+          ><label
+            >Compatibility<select id="nodeCompatibility">
+              <option>unknown</option>
+              <option>confirmed</option>
+              <option>incompatible</option>
+            </select></label
+          ><label
+            >Evidence/source<input
+              id="nodeSource"
+              placeholder="Vendor manual or user inventory" /></label
+          ><button id="addNode">Add & assess</button>
+          <div id="nodes"></div>
+          <div class="toolbar">
+            <button class="secondary" id="exportNodes">
+              Export registry TSV</button
+            ><button class="secondary" id="clearNodes">Clear registry</button
+            ><input
+              id="importNodes"
+              type="file"
+              accept=".tsv,.txt"
+              aria-label="Import node registry"
+            />
+          </div>
+          <p class="hint">
+            “Confirmed” is your documented assertion. RFVision cannot turn a
+            single client adapter into a physical repeater and does not
+            reconfigure any device.
+          </p>
+        </div>
+      </section>
+      <section class="page" id="hardware">
+        <p>Hardware / runtime identity, firmware reports and source evidence</p>
+        <div class="panel" id="hardwareData"></div>
+        <div class="notice">
+          Source expectations are not physical validation. The installed
+          driver/firmware may differ from the audited tree. No register reads,
+          debugfs probing or driver replacement is performed.
+        </div>
+      </section>
+      <section class="page" id="diagnostics">
+        <p>
+          Diagnostics / acquisition failures are visible, never replaced with
+          zeros
+        </p>
+        <div class="panel" id="diagnosticData"></div>
+      </section>
+      <section class="page" id="recordings">
+        <p>Recordings / retain provenance and replay measured history</p>
+        <div class="panel">
+          <h3>Browser session</h3>
+          <p id="recordingCount">No captured batches.</p>
+          <div class="toolbar">
+            <button id="exportRecording">Export browser session</button
+            ><input
+              id="importRecording"
+              type="file"
+              accept=".json"
+              aria-label="Replay browser session"
+            /><button class="secondary" id="clearRecording">
+              Clear session
+            </button>
+          </div>
+          <p class="hint">
+            Bounded to the last 300 batches, memory only. Export includes
+            sensitive device/BSSID/location metadata; keep it private. Browser
+            JSON is separate from CLI RFVREC1 binary recordings. Import stops
+            live polling and is labelled replay.
+          </p>
+          <h3>CLI recording / replay</h3>
+          <pre style="overflow: auto">
+rfv record CORE_SOCKET wlan0 survey.rfv 30 1000
+rfv replay survey.rfv
+rfv coverage survey.rfv</pre
+          >
+          <p class="hint">
+            Append REFERENCE LABEL X_M Y_M POSITION_SOURCE to record a fixed
+            measured position. Use a new file at each location. RFVCSI/1 source
+            files are offline CSI recordings; re-import them to replay analysis.
+          </p>
+        </div>
+      </section>
+      <div class="footer">
+        RFVision · provenance first / standard driver preserved / predictions
+        never promoted to measurements
+      </div>
+    </main>
+    <script>
+      "use strict";
+      const $ = (id) => document.getElementById(id),
+        pages = [
+          ["live", "Live Monitor"],
+          ["csi", "CSI Research"],
+          ["coverage", "RF Coverage"],
+          ["budget", "Link Budget"],
+          ["optimizer", "RF Optimizer"],
+          ["range", "Range Extenders"],
+          ["hardware", "Hardware"],
+          ["diagnostics", "Diagnostics"],
+          ["recordings", "Recordings"],
+        ];
+      let rows = [],
+        batches = [],
+        inventory = [],
+        timer = null,
+        busy = false,
+        replay = false,
+        pinned = null,
+        nodes = [],
+        csiRows = [],
+        coverageRows = [];
+      function el(tag, text, cls) {
+        const e = document.createElement(tag);
+        if (text !== undefined) e.textContent = text;
+        if (cls) e.className = cls;
+        return e;
+      }
+      for (const [id, name] of pages) {
+        const b = el("button", name, id === "live" ? "active" : "");
+        b.onclick = () => {
+          document
+            .querySelectorAll(".page")
+            .forEach((p) => p.classList.toggle("active", p.id === id));
+          document
+            .querySelectorAll("nav button")
+            .forEach((x) => x.classList.toggle("active", x === b));
+          $("title").textContent = name;
+          drawAll();
+        };
+        $("nav").append(b);
+      }
+      function error(e) {
+        $("error").textContent = e?.message || String(e);
+      }
+      async function api(path, body) {
+        const response = await fetch("/api/" + path, {
+          method: body === undefined ? "GET" : "POST",
+          headers: {
+            Authorization: "Bearer " + $("token").value,
+            "Content-Type": "text/plain",
+          },
+          body,
+        });
+        const data = await response.json();
+        if (!response.ok) throw Error(data[0]?.message || response.statusText);
+        $("error").textContent = "";
+        return data;
+      }
+      function empty(id, message = "Unavailable · no matching measurements") {
+        $(id).replaceChildren(el("div", message, "empty"));
+      }
+      function table(id, data, cols) {
+        const target = $(id);
+        target.replaceChildren();
+        if (!data.length) {
+          empty(id);
+          return;
+        }
+        const wrap = el("div", undefined, "scroll"),
+          t = el("table"),
+          head = el("tr");
+        for (const [k, title] of cols) head.append(el("th", title));
+        t.append(head);
+        for (const r of data) {
+          const tr = el("tr");
+          for (const [k] of cols) tr.append(el("td", r[k] ?? "—"));
+          t.append(tr);
+        }
+        wrap.append(t);
+        target.append(wrap);
+      }
+      function records(kind, rs = rows) {
+        return rs.filter((r) => r.kind === kind);
+      }
+      function measurement(name, rs = rows) {
+        return rs.find((r) => r.kind === "measurement" && r.name === name);
+      }
+      function metric(container, label, value, note) {
+        const m = el("div", undefined, "metric");
+        m.append(
+          el("div", label, "label"),
+          el("div", value, "value"),
+          el("small", note),
+        );
+        container.append(m);
+      }
+      function linkKey(r, rs) {
+        const f =
+          rs.find(
+            (m) =>
+              m.name === "channel_frequency" && m.device_id === r.device_id,
+          )?.value ?? "?";
+        return [r.device_id, r.interface, r.peer ?? "?", f].join(" / ");
+      }
+      function signalRows() {
+        return batches.flatMap((b) =>
+          b
+            .filter(
+              (r) =>
+                r.kind === "measurement" &&
+                r.name === "rssi" &&
+                r.quality !== "simulation" &&
+                r.time_basis !== "synthetic",
+            )
+            .map((r) => ({
+              ...r,
+              link: linkKey(r, b),
+              position: b.find(
+                (p) => p.kind === "position" && p.interface === r.interface,
+              ),
+            })),
+        );
+      }
+      function choices(select, values) {
+        const old = select.value;
+        select.replaceChildren();
+        for (const value of values) {
+          const o = el("option", value);
+          o.value = value;
+          select.append(o);
+        }
+        if (values.includes(old)) select.value = old;
+      }
+      function paint() {
+        const rs = records("measurement");
+        $("metrics").replaceChildren();
+        $("optimizerMetrics").replaceChildren();
+        for (const [name, label, unit] of [
+          ["rssi", "Station signal", "dBm"],
+          ["channel_frequency", "Current frequency", "MHz"],
+          ["rx_bitrate", "Receive link rate", "Mbit/s"],
+        ]) {
+          const m = measurement(name);
+          metric(
+            $("metrics"),
+            label,
+            m ? m.value + " " + unit : "—",
+            m ? m.source : "No current measurement",
+          );
+        }
+        for (const [name, label, unit] of [
+          ["rssi", "Measured signal", "dBm"],
+          ["channel_width", "Current bandwidth", "MHz"],
+          ["configured_tx_power", "Configured TX power", "dBm"],
+        ]) {
+          const m = measurement(name);
+          metric(
+            $("optimizerMetrics"),
+            label,
+            m ? m.value + " " + unit : "—",
+            m ? m.source : "Unavailable; not inferred",
+          );
+        }
+        table("measurements", rs, [
+          ["name", "Metric"],
+          ["value", "Value"],
+          ["unit", "Unit"],
+          ["peer", "Peer"],
+          ["source", "Source"],
+          ["quality", "Quality"],
+        ]);
+        table(
+          "context",
+          rs.filter((r) =>
+            [
+              "rssi_average",
+              "channel",
+              "channel_frequency",
+              "channel_width",
+              "rx_mcs",
+              "tx_mcs",
+              "rx_nss",
+              "tx_nss",
+            ].includes(r.name),
+          ),
+          [
+            ["name", "Context"],
+            ["value", "Value"],
+            ["unit", "Unit"],
+          ],
+        );
+        const history = signalRows();
+        choices($("link"), [...new Set(history.map((r) => r.link))]);
+        table("power", records("power_limit"), [
+          ["frequency_mhz", "MHz"],
+          ["maximum_dbm", "Ceiling / dBm"],
+          ["minimum_dbm", "Minimum"],
+          ["status", "State"],
+          ["constraints", "Driver constraints"],
+        ]);
+        const networks = records("network")
+          .map((r) => ({ ...r }))
+          .sort(
+            (a, b) => Number(b.rssi_dbm ?? -999) - Number(a.rssi_dbm ?? -999),
+          );
+        table("networks", networks, [
+          ["ssid", "SSID"],
+          ["bssid", "BSSID"],
+          ["rssi_dbm", "RSSI / dBm"],
+          ["frequency_mhz", "MHz"],
+          ["last_seen_ms", "Last seen / ms"],
+        ]);
+        const recommendations = records("recommendation");
+        $("recommendations").replaceChildren();
+        if (!recommendations.length)
+          empty(
+            "recommendations",
+            "Insufficient evidence for a recommendation. This is not a clean bill of link health.",
+          );
+        for (const r of recommendations) {
+          const p = el("div", undefined, "recommendation");
+          p.append(el("b", r.code), el("p", r.evidence), el("p", r.action));
+          $("recommendations").append(p);
+        }
+        const hw = records("device").length ? rows : inventory;
+        table(
+          "hardwareData",
+          hw
+            .filter((r) =>
+              ["device", "driver_info", "wiphy", "csi_assessment"].includes(
+                r.kind,
+              ),
+            )
+            .flatMap((r) =>
+              Object.entries(r)
+                .filter(([k]) => k !== "raw")
+                .map(([k, v]) => ({ kind: r.kind, field: k, value: v })),
+            ),
+          [
+            ["kind", "Record"],
+            ["field", "Field"],
+            ["value", "Value"],
+          ],
+        );
+        table(
+          "csiStatus",
+          (records("csi_assessment").length ? rows : inventory).filter(
+            (r) => r.kind === "csi_assessment",
+          ),
+          [
+            ["interface", "Interface"],
+            ["status", "Classification"],
+            ["hardware_support", "Hardware"],
+            ["driver_support", "Driver"],
+            ["firmware_support", "Firmware"],
+          ],
+        );
+        table(
+          "diagnosticData",
+          rows.filter((r) => ["diagnostic", "error"].includes(r.kind)),
+          [
+            ["interface", "Interface"],
+            ["code", "Code"],
+            ["message", "Details"],
+          ],
+        );
+        const latest = rs
+          .map((r) => Number(r.observed_unix_ns) / 1e6)
+          .filter(Number.isFinite)
+          .sort((a, b) => b - a)[0];
+        $("status").className = "status" + (rs.length ? "" : " off");
+        $("status").textContent =
+          (replay
+            ? "REPLAY · "
+            : rs.length
+              ? "LIVE · "
+              : "NO MEASUREMENTS · ") +
+          (latest
+            ? new Date(latest).toLocaleString()
+            : "waiting for valid observations");
+        $("recordingCount").textContent =
+          batches.length +
+          " retained batches · " +
+          (replay ? "replay; not live" : "session memory only");
+        compare();
+        coverage();
+        drawAll();
+      }
+      function setupCanvas(id) {
+        const c = $(id),
+          rect = c.getBoundingClientRect(),
+          dpr = devicePixelRatio || 1;
+        c.width = Math.max(300, rect.width) * dpr;
+        c.height = 260 * dpr;
+        const ctx = c.getContext("2d");
+        ctx.scale(dpr, dpr);
+        return [ctx, c.width / dpr, 260];
+      }
+      function graph(
+        id,
+        data,
+        { min, max, unit = "", pointsOnly = false } = {},
+      ) {
+        const [c, w, h] = setupCanvas(id);
+        c.font = "11px system-ui";
+        c.fillStyle = "#92a4b6";
+        const pts = data.filter(
+          (p) => Number.isFinite(p.x) && Number.isFinite(p.y),
+        );
+        if (!pts.length) {
+          c.fillText("No actual samples to display", 30, 120);
+          return;
+        }
+        const lo = min ?? Math.min(...pts.map((p) => p.y)),
+          hi = max ?? Math.max(...pts.map((p) => p.y));
+        const xmin = Math.min(...pts.map((p) => p.x)),
+          xmax = Math.max(...pts.map((p) => p.x));
+        const X = (x) => 50 + ((x - xmin) / (xmax - xmin || 1)) * (w - 75),
+          Y = (y) => 215 - ((y - lo) / (hi - lo || 1)) * 185;
+        for (let i = 0; i < 5; i++) {
+          const y = lo + ((hi - lo) * i) / 4;
+          c.strokeStyle = "#293440";
+          c.beginPath();
+          c.moveTo(48, Y(y));
+          c.lineTo(w - 15, Y(y));
+          c.stroke();
+          c.fillStyle = "#92a4b6";
+          c.fillText(y.toFixed(1), 3, Y(y) + 4);
+        }
+        c.fillText(unit, 50, 248);
+        c.fillStyle = "#67dfc1";
+        for (const p of pts) {
+          c.beginPath();
+          c.arc(X(p.x), Y(p.y), 3, 0, Math.PI * 2);
+          c.fill();
+        }
+        if (!pointsOnly) {
+          c.strokeStyle = "#67dfc1";
+          c.beginPath();
+          let previous = null;
+          for (const p of data) {
+            if (!Number.isFinite(p.y)) {
+              previous = null;
+              continue;
+            }
+            if (previous) c.lineTo(X(p.x), Y(p.y));
+            else c.moveTo(X(p.x), Y(p.y));
+            previous = p;
+          }
+          c.stroke();
+        }
+      }
+      function coverage() {
+        const signals = signalRows(),
+          groups = new Map();
+        for (const r of signals) {
+          const p = r.position;
+          const key = [
+            r.link,
+            p?.reference ?? "",
+            p?.label ?? "",
+            p?.x_m ?? "",
+            p?.y_m ?? "",
+          ].join("|");
+          if (!groups.has(key)) groups.set(key, []);
+          groups.get(key).push(r);
+        }
+        coverageRows = [...groups.values()].map((g) => {
+          const r = g.at(-1),
+            p = r.position,
+            mean = g.reduce((a, x) => a + Number(x.value), 0) / g.length;
+          return {
+            link: r.link,
+            reference: p?.reference,
+            location: p?.label ?? "Unlocated",
+            x: p ? Number(p.x_m) : null,
+            y: p ? Number(p.y_m) : null,
+            count: g.length,
+            mean: mean.toFixed(1),
+            spread: Math.sqrt(
+              g.reduce((a, x) => a + (Number(x.value) - mean) ** 2, 0) /
+                g.length,
+            ).toFixed(1),
+            age:
+              Math.max(
+                0,
+                (Date.now() - Number(r.observed_unix_ns) / 1e6) / 1000,
+              ).toFixed(0) + " s",
+            mapKey: p ? [r.link, p.reference].join(" | ") : null,
+          };
+        });
+        choices($("mapGroup"), [
+          ...new Set(coverageRows.filter((r) => r.mapKey).map((r) => r.mapKey)),
+        ]);
+        const selected = $("mapGroup").value;
+        table(
+          "coverageTable",
+          coverageRows.filter((r) => !r.mapKey || r.mapKey === selected),
+          [
+            ["location", "Location"],
+            ["mean", "Mean dBm"],
+            ["spread", "Spread dB"],
+            ["count", "N"],
+            ["age", "Age"],
+          ],
+        );
+      }
+      function drawMap() {
+        const [c, w, h] = setupCanvas("map"),
+          ps = coverageRows.filter(
+            (r) =>
+              r.mapKey &&
+              r.mapKey === $("mapGroup").value &&
+              Number.isFinite(r.x) &&
+              Number.isFinite(r.y),
+          );
+        c.fillStyle = "#92a4b6";
+        c.font = "12px system-ui";
+        if (!ps.length) {
+          c.fillText("No spatially referenced measurements", 25, 120);
+          return;
+        }
+        const minX = Math.min(...ps.map((p) => p.x)),
+          maxX = Math.max(...ps.map((p) => p.x)),
+          minY = Math.min(...ps.map((p) => p.y)),
+          maxY = Math.max(...ps.map((p) => p.y));
+        const scale = Math.min(
+          (w - 100) / (maxX - minX || 1),
+          160 / (maxY - minY || 1),
+        );
+        for (const p of ps) {
+          const x = 50 + (p.x - minX) * scale,
+            y = 200 - (p.y - minY) * scale;
+          const hue = Math.max(0, Math.min(150, (Number(p.mean) + 90) * 3));
+          c.fillStyle = `hsl(${hue} 60% 60%)`;
+          c.fillRect(x - 6, y - 6, 12, 12);
+          c.fillStyle = "#e3ecf5";
+          c.fillText(
+            `${p.location}: ${p.mean} dBm (${p.x}, ${p.y}) m`,
+            Math.min(x + 12, w - 230),
+            y - 12,
+          );
+        }
+        c.fillStyle = "#92a4b6";
+        c.fillText(
+          "Measured locations only · unmeasured space left blank",
+          25,
+          246,
+        );
+      }
+      function drawAll() {
+        graph(
+          "signal",
+          signalRows()
+            .filter((r) => r.link === $("link").value)
+            .map((r) => ({
+              x: Number(r.observed_unix_ns) / 1e9,
+              y: Number(r.value),
+            })),
+          {
+            min: -100,
+            max: -20,
+            unit: "Host observation time → · dBm · points only",
+            pointsOnly: true,
+          },
+        );
+        drawMap();
+        drawCsi();
+      }
+      function compare() {
+        if (!pinned) {
+          empty(
+            "comparison",
+            "Pin a measured baseline before making a manual change.",
+          );
+          return;
+        }
+        const data = [];
+        for (const before of pinned.filter(
+          (r) =>
+            r.kind === "measurement" &&
+            ["rssi", "rx_bitrate", "tx_bitrate", "channel_width"].includes(
+              r.name,
+            ),
+        )) {
+          const after = rows.find(
+            (r) =>
+              r.kind === "measurement" &&
+              r.name === before.name &&
+              linkKey(r, rows) === linkKey(before, pinned),
+          );
+          if (after)
+            data.push({
+              name: before.name,
+              before: before.value,
+              after: after.value,
+              delta: (Number(after.value) - Number(before.value)).toFixed(2),
+              unit: before.unit,
+            });
+        }
+        table("comparison", data, [
+          ["name", "Metric"],
+          ["before", "Before"],
+          ["after", "After"],
+          ["delta", "Δ"],
+          ["unit", "Unit"],
+        ]);
+      }
+      function positionBody() {
+        if (!$("located").checked) return undefined;
+        const p = [
+          $("reference").value,
+          $("location").value,
+          $("x").value,
+          $("y").value,
+          $("positionSource").value,
+        ];
+        if (
+          p.some((v) => !v.trim() || /[\t\r\n]/.test(v)) ||
+          !Number.isFinite(Number(p[2])) ||
+          !Number.isFinite(Number(p[3]))
+        )
+          throw Error(
+            "Provide reference, label, finite coordinates and position source.",
+          );
+        return p.join("\t");
+      }
+      async function sample() {
+        if (busy) return;
+        busy = true;
+        try {
+          $("error").textContent = "";
+          const next = await api("sample", positionBody());
+          if (replay) {
+            batches = [];
+            pinned = null;
+          }
+          replay = false;
+          rows = next;
+          batches.push(next);
+          while (
+            batches.length > 300 ||
+            JSON.stringify(batches).length > 32 * 1024 * 1024
+          )
+            batches.shift();
+          paint();
+        } catch (e) {
+          error(e);
+          $("status").textContent =
+            "Acquisition failed · displayed values are stale";
+          $("status").className = "status off";
+        } finally {
+          busy = false;
+        }
+      }
+      function stop() {
+        clearTimeout(timer);
+        timer = null;
+        $("pause").textContent = "Start live";
+      }
+      async function tick() {
+        await sample();
+        if (timer !== null) timer = setTimeout(tick, 2000);
+      }
+      $("connect").onclick = async () => {
+        try {
+          inventory = await api("report");
+          paint();
+          await sample();
+        } catch (e) {
+          error(e);
+        }
+      };
+      $("pause").onclick = () => {
+        if (timer !== null) stop();
+        else {
+          timer = 0;
+          $("pause").textContent = "Pause";
+          tick();
+        }
+      };
+      $("measureHere").onclick = sample;
+      $("baseline").onclick = () => {
+        pinned = structuredClone(rows);
+        compare();
+      };
+      $("link").onchange = drawAll;
+      $("mapGroup").onchange = () => {
+        coverage();
+        drawAll();
+      };
+      window.addEventListener("resize", drawAll);
+      const budgetSpec = [
+        ["tx_power", "TX power", "dBm"],
+        ["tx_gain", "TX antenna gain", "dBi"],
+        ["rx_gain", "RX antenna gain", "dBi"],
+        ["tx_loss", "TX cable / connector loss", "dB"],
+        ["rx_loss", "RX cable / connector loss", "dB"],
+        ["distance", "Distance", "m"],
+        ["frequency", "Frequency", "MHz"],
+        ["fade_reserve", "Fade reserve", "dB"],
+        ["sensitivity", "Receiver sensitivity (optional)", "dBm"],
+      ];
+      for (const [key, name, unit] of budgetSpec) {
+        const r = el("div", undefined, "budgetRow");
+        r.append(el("h3", name + " / " + unit));
+        const n = el("input");
+        n.type = "number";
+        n.step = "any";
+        n.id = "b_" + key;
+        n.setAttribute("aria-label", name);
+        const b = el("select");
+        b.id = "basis_" + key;
+        b.setAttribute("aria-label", name + " basis");
+        for (const value of [
+          "measured",
+          "configured",
+          "manufacturer",
+          "estimated",
+        ])
+          b.append(el("option", value));
+        const s = el("input");
+        s.type = "text";
+        s.placeholder = "Source / assumption";
+        s.id = "source_" + key;
+        s.setAttribute("aria-label", name + " source");
+        r.append(n, b, s);
+        $("budgetFields").append(r);
+      }
+      $("calculate").onclick = async () => {
+        try {
+          const lines = budgetSpec.flatMap(([k]) => {
+            const value = $("b_" + k).value,
+              source = $("source_" + k).value;
+            if (!value && k === "sensitivity") return [];
+            if (!value || !source.trim() || /[\t\r\n]/.test(source))
+              throw Error(
+                "Every budget input needs a value, basis and source.",
+              );
+            return [[k, value, $("basis_" + k).value, source].join("\t")];
+          });
+          const r = await api("budget", lines.join("\n"));
+          table(
+            "budgetOutput",
+            r.filter((r) => r.kind === "prediction"),
+            [
+              ["name", "Prediction · NOT MEASURED"],
+              ["value", "Value"],
+              ["unit", "Unit"],
+              ["confidence", "Confidence"],
+            ],
+          );
+        } catch (e) {
+          error(e);
+        }
+      };
+      function download(name, text, type = "text/plain") {
+        const url = URL.createObjectURL(new Blob([text], { type }));
+        const a = el("a");
+        a.href = url;
+        a.download = name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      async function assessNodes(next) {
+        const result = await api("range", next.join("\n"));
+        nodes = next;
+        table("nodes", result, [
+          ["id", "Node"],
+          ["role", "Role"],
+          ["backhaul", "Backhaul"],
+          ["compatibility", "Compatibility"],
+          ["source", "Evidence"],
+          ["guidance", "Guided assessment"],
+        ]);
+      }
+      $("addNode").onclick = async () => {
+        try {
+          const p = [
+            $("nodeId").value,
+            $("nodeRole").value,
+            $("nodeBackhaul").value,
+            $("nodeCompatibility").value,
+            $("nodeSource").value,
+          ];
+          if (p.some((v) => !v.trim() || /[\t\r\n]/.test(v)))
+            throw Error("Provide a node ID and evidence source.");
+          await assessNodes([...nodes, p.join("\t")]);
+        } catch (e) {
+          error(e);
+        }
+      };
+      $("exportNodes").onclick = () =>
+        download("rfvision-nodes.tsv", nodes.join("\n"));
+      $("clearNodes").onclick = () => {
+        nodes = [];
+        empty("nodes", "No registered nodes");
+      };
+      async function fileText(input, max = 4 * 1024 * 1024) {
+        const f = input.files[0];
+        if (!f) throw Error("Select a file");
+        if (f.size > max) throw Error("File exceeds size limit");
+        return f.text();
+      }
+      $("importNodes").onchange = async () => {
+        try {
+          await assessNodes(
+            (await fileText($("importNodes")))
+              .split("\n")
+              .filter((s) => s.trim() && !s.startsWith("#")),
+          );
+        } catch (e) {
+          error(e);
+        }
+      };
+      $("csiFile").onchange = async () => {
+        try {
+          csiRows = await api("csi", await fileText($("csiFile")));
+          const meta = csiRows[0];
+          table(
+            "csiMeta",
+            Object.entries(meta).map(([field, value]) => ({ field, value })),
+            [
+              ["field", "Capture metadata"],
+              ["value", "Value"],
+            ],
+          );
+          table(
+            "csiStats",
+            csiRows.filter((r) => r.kind === "csi_temporal"),
+            [
+              ["iq_index", "IQ index"],
+              ["amplitude_mean", "Mean amplitude"],
+              ["amplitude_variance", "Variance"],
+              ["amplitude_ema", "EMA α=0.2"],
+            ],
+          );
+          choices($("csiFrame"), [
+            ...new Set(
+              csiRows
+                .filter((r) => r.kind === "csi_bin")
+                .map((r) => r.observed_unix_ns),
+            ),
+          ]);
+          choices($("csiStream"), [
+            ...new Set(
+              csiRows
+                .filter((r) => r.kind === "csi_bin")
+                .map((r) => r.rx + "/" + r.tx),
+            ),
+          ]);
+          drawCsi();
+        } catch (e) {
+          error(e);
+        }
+      };
+      function drawCsi() {
+        const bins = csiRows.filter(
+          (r) =>
+            r.kind === "csi_bin" &&
+            r.observed_unix_ns === $("csiFrame").value &&
+            r.rx + "/" + r.tx === $("csiStream").value,
+        );
+        graph(
+          "amplitude",
+          bins.map((r) => ({
+            x: Number(r.subcarrier),
+            y: Number(r.amplitude),
+          })),
+          { unit: "Subcarrier index →", pointsOnly: true },
+        );
+        graph(
+          "phase",
+          bins.map((r) => ({
+            x: Number(r.subcarrier),
+            y: r.phase_rad === undefined ? NaN : Number(r.phase_rad),
+          })),
+          {
+            min: -Math.PI,
+            max: Math.PI,
+            unit: "Subcarrier index → · no invented phase",
+            pointsOnly: true,
+          },
+        );
+      }
+      $("csiFrame").onchange = drawCsi;
+      $("csiStream").onchange = drawCsi;
+      $("exportRecording").onclick = () =>
+        download(
+          "rfvision-session.json",
+          JSON.stringify({ schema: "RFV-BROWSER-1", batches }),
+          "application/json",
+        );
+      function validateReplay(data) {
+        if (
+          data?.schema !== "RFV-BROWSER-1" ||
+          !Array.isArray(data.batches) ||
+          data.batches.length > 300
+        )
+          throw Error("Invalid browser recording schema or batch limit");
+        const last = new Map();
+        for (const batch of data.batches) {
+          if (!Array.isArray(batch) || batch.length > 4096)
+            throw Error("Invalid batch");
+          for (const r of batch) {
+            if (
+              !r ||
+              typeof r !== "object" ||
+              Object.entries(r).some(
+                ([k, v]) => typeof v !== "string" || v.length > 65536,
+              ) ||
+              !r.kind
+            )
+              throw Error("Invalid record");
+            if (r.kind === "measurement") {
+              if (
+                ![
+                  "device_id",
+                  "interface",
+                  "name",
+                  "unit",
+                  "source",
+                  "quality",
+                  "time_basis",
+                ].every((k) => r[k]) ||
+                !/^\d+$/.test(r.observed_unix_ns) ||
+                BigInt(r.observed_unix_ns) <= 0n ||
+                !Number.isFinite(Number(r.value))
+              )
+                throw Error("Invalid measurement");
+              if (
+                r.name === "rssi" &&
+                (r.unit !== "dBm" ||
+                  Number(r.value) > 0 ||
+                  Number(r.value) < -127 ||
+                  !batch.some(
+                    (d) => d.kind === "device" && d.device_id === r.device_id,
+                  ))
+              )
+                throw Error("Invalid RSSI");
+              const key = JSON.stringify([
+                r.device_id,
+                r.interface,
+                r.peer,
+                r.name,
+                r.frequency_mhz,
+                r.chain_index,
+              ]);
+              const t = BigInt(r.observed_unix_ns);
+              if (last.has(key) && t < last.get(key))
+                throw Error("Nonmonotonic recording timestamps");
+              last.set(key, t);
+            }
+            if (
+              r.kind === "position" &&
+              (!r.reference ||
+                !r.label ||
+                !r.source ||
+                !r.x_m?.trim() ||
+                !r.y_m?.trim() ||
+                !Number.isFinite(Number(r.x_m)) ||
+                !Number.isFinite(Number(r.y_m)))
+            )
+              throw Error("Invalid position provenance");
+          }
+        }
+        return data.batches;
+      }
+      $("importRecording").onchange = async () => {
+        try {
+          const imported = validateReplay(
+            JSON.parse(await fileText($("importRecording"), 32 * 1024 * 1024)),
+          );
+          stop();
+          batches = imported;
+          rows = batches.at(-1) ?? [];
+          pinned = null;
+          replay = true;
+          paint();
+        } catch (e) {
+          error(e);
+        }
+      };
+      $("clearRecording").onclick = () => {
+        stop();
+        rows = [];
+        batches = [];
+        pinned = null;
+        replay = false;
+        paint();
+      };
+      paint();
+      empty("nodes", "No registered nodes · add documented equipment");
+    </script>
+  </body>
+</html>

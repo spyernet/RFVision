@@ -34,7 +34,7 @@ fn capabilities(d: &Device) -> Vec<Record> {
     let mut out = Vec::new();
     for (features,status,implementation,reason) in [
         ("rx_bytes,tx_bytes,rx_packets,tx_packets,rx_errors,tx_errors,rx_dropped,tx_dropped","AVAILABLE_WITH_ADAPTER","implemented","Read-only sysfs counters; availability promoted only after successful read; not PHY-specific error counts"),
-        ("rssi,rssi_average,chain_rssi,station_rx_bytes,station_tx_bytes,station_rx_packets,station_tx_packets,tx_retries,tx_failed,rx_drop_misc,rx_bitrate,tx_bitrate,rx_mcs,tx_mcs,rx_nss,tx_nss,channel_frequency,channel_width","AVAILABLE_WITH_ADAPTER","implemented","Public iw/nl80211 query; field presence, association, installed tools and permissions determine runtime availability"),
+        ("rssi,rssi_average,chain_rssi,station_rx_bytes,station_tx_bytes,station_rx_packets,station_tx_packets,tx_retries,tx_failed,rx_drop_misc,rx_bitrate,tx_bitrate,rx_mcs,tx_mcs,rx_nss,tx_nss,channel_frequency,channel_width,channel,configured_tx_power","AVAILABLE_WITH_ADAPTER","implemented","Public iw/nl80211 query; field presence, association, installed tools and permissions determine runtime availability"),
         ("noise,channel_active_time,channel_busy_time,channel_rx_time,channel_tx_time","UNVERIFIED","implemented_parser","Survey parser exists; no assertion that this driver implements survey data"),
         ("rx_timestamp,per_packet_phy_status","AVAILABLE_WITH_ADAPTER","not_implemented","Source RX metadata reaches mac80211; existing monitor/radiotap path is a future explicit opt-in integration; no monitor interface is created"),
         ("evm,frequency_offset,phy_snr","REQUIRES_DRIVER_MODIFICATION","not_implemented","RTL8821C header defines PHY fields but inspected parser does not populate these values; units/validity must be verified before instrumentation"),
@@ -72,7 +72,7 @@ fn device_records(d: &Device) -> Vec<Record> {
             info.insert("chipset".into(), "RTL8821CE (PCI ID match)".into());
         }
     }
-    let mut records = vec![info];
+    let mut records = vec![info, rfv_hal::research::csi_capability(d)];
     if yes {
         records.extend(capabilities(d));
     } else {

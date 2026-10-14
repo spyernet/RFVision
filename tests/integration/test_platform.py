@@ -151,6 +151,38 @@ class Platform(unittest.TestCase):
         p = self.cli('wizard', 'rollback', prefix, '--apply')
         self.assertEqual(p.returncode, 0, p.stderr); self.assertFalse(prefix.exists())
 
+    def test_install_rtw88_userspace_adapter_only(self):
+        prefix = self.dir / 'rtw88-adapter'
+        p = self.cli('wizard', 'plan-rtw88', prefix, BIN)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        plan = json.loads(p.stdout)[0]
+        self.assertIn('only rfv-adapter-rtw88', plan['actions'])
+        self.assertEqual(plan['driver_changes'], 'none')
+        self.assertFalse(prefix.exists())
+
+        p = self.cli('wizard', 'install-rtw88', prefix, BIN)
+        self.assertNotEqual(p.returncode, 0)
+        self.assertFalse(prefix.exists())
+        p = self.cli('wizard', 'install-rtw88', prefix, BIN, '--apply')
+        self.assertEqual(p.returncode, 0, p.stderr)
+        result = json.loads(p.stdout)[0]
+        self.assertEqual(result['driver_changes'], 'none')
+        self.assertEqual(sorted(path.name for path in prefix.iterdir()),
+                         ['manifest.tsv', 'rfv-adapter-rtw88'])
+        self.assertEqual((prefix / 'rfv-adapter-rtw88').read_bytes(),
+                         (BIN / 'rfv-adapter-rtw88').read_bytes())
+        self.assertFalse((prefix / 'rfvd').exists())
+        self.assertFalse((prefix / 'rfv').exists())
+
+        (prefix / 'unexpected').write_text('not installer-owned')
+        p = self.cli('wizard', 'rollback', prefix, '--apply')
+        self.assertNotEqual(p.returncode, 0)
+        self.assertTrue((prefix / 'rfv-adapter-rtw88').exists())
+        (prefix / 'unexpected').unlink()
+        p = self.cli('wizard', 'rollback', prefix, '--apply')
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertFalse(prefix.exists())
+
     def test_synthetic_adapter_validates_driver_independence(self):
         # Deliberately not real RF. Synthetic measurements carry quality=simulation.
         listener = socket.socket(socket.AF_UNIX); listener.bind(str(self.adapter)); listener.listen(1)

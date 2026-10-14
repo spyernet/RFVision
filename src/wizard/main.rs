@@ -103,9 +103,11 @@ const USAGE: &str = "RFVision 0.1 — passive Linux RF diagnostics\n\
   rfv wizard validate CORE_SOCKET\n\
   rfv wizard plan PREFIX BUILT_BINARY_DIRECTORY\n\
   rfv wizard install PREFIX BUILT_BINARY_DIRECTORY --apply\n\
+  rfv wizard plan-rtw88 PREFIX BUILT_BINARY_DIRECTORY\n\
+  rfv wizard install-rtw88 PREFIX BUILT_BINARY_DIRECTORY --apply\n\
   rfv wizard rollback PREFIX --apply\n\
 Output: JSON array; watch: one array per line. Unknown data are omitted.\n\
-No scan, monitor creation, transmission, firmware changes or driver replacement.";
+No scan, monitor creation, transmission, firmware changes or system Wi-Fi driver replacement.";
 fn run(args: &[String]) -> io::Result<i32> {
     let a: Vec<_> = args.iter().map(String::as_str).collect();
     let rows = match a.as_slice() {
@@ -147,8 +149,14 @@ fn run(args: &[String]) -> io::Result<i32> {
             return Ok(if complete { 0 } else { 2 });
         }
         ["wizard", "plan", prefix, source] => install::plan(Path::new(prefix), Path::new(source)),
+        ["wizard", "plan-rtw88", prefix, source] => {
+            install::plan_rtw88(Path::new(prefix), Path::new(source))
+        }
         ["wizard", "install", prefix, source, "--apply"] => {
             install::install(Path::new(prefix), Path::new(source))?
+        }
+        ["wizard", "install-rtw88", prefix, source, "--apply"] => {
+            install::install_rtw88(Path::new(prefix), Path::new(source))?
         }
         ["wizard", "rollback", prefix, "--apply"] => install::rollback(Path::new(prefix))?,
         _ => return Err(io::Error::other(USAGE)),

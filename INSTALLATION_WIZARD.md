@@ -28,6 +28,10 @@ names. The source expectation and runtime evidence remain distinct.
 only a new private userspace installation, with explicit limitations. Obtain
 approved binaries first; the wizard is not a downloader or a signature verifier.
 
+`rfv wizard plan-rtw88 PREFIX BUILT_BINARY_DIRECTORY` plans an adapter-only
+installation. It copies only the bundled `rfv-adapter-rtw88` userspace IPC
+executable; it is not the Linux kernel `rtw88` driver source in `drv/rtw88/`.
+
 ## 3. Install
 
 `rfv wizard install PREFIX BUILT_BINARY_DIRECTORY --apply`
@@ -45,6 +49,19 @@ approved binaries first; the wizard is not a downloader or a signature verifier.
   An abrupt crash can leave a partial prefix; automatic crash recovery and
   directory durability guarantees are not implemented. Inspect manually rather
   than recursively deleting an unknown tree.
+
+### Install only the bundled rtw88 IPC adapter
+
+`rfv wizard install-rtw88 PREFIX BUILT_BINARY_DIRECTORY --apply`
+
+- Installs only `rfv-adapter-rtw88` into a new private prefix; `plan-rtw88`
+  previews the action without side effects.
+- This is a userspace IPC adapter, not a kernel module. It neither installs nor
+  replaces, unloads, or modifies any Wi-Fi driver already on the system.
+- The same explicit `--apply`, ownership, permissions, exclusive creation,
+  source validation, and rollback safeguards apply. It does not install `rfv`
+  or `rfvd`; start the adapter with its absolute installed path and use a
+  separately built/installed RFVision core.
 
 Use a separate private runtime directory to start the two server processes;
 see README. Installed files are not an assurance of IPC or hardware readiness.

@@ -7,6 +7,7 @@ use std::{
     path::Path,
 };
 const BINS: [&str; 3] = ["rfv", "rfvd", "rfv-adapter-rtw88"];
+const RTW88_BINS: [&str; 1] = ["rfv-adapter-rtw88"];
 fn private_parent(prefix: &Path) -> io::Result<()> {
     if !prefix.is_absolute() || prefix.file_name().is_none() {
         return Err(io::Error::other("installation prefix must be absolute"));
@@ -44,13 +45,47 @@ fn checksum(bytes: &[u8]) -> u64 {
     })
 }
 pub fn plan(prefix: &Path, source: &Path) -> Vec<Record> {
-    vec![record(&[("kind","installation_plan"),("prefix",&prefix.display().to_string()),("source",&source.display().to_string()),("actions","create new private prefix; copy rfv, rfvd, rfv-adapter-rtw88; write ownership manifest"),("driver_changes","none"),("network_changes","none"),("privilege_escalation","none"),("autostart","none"),("requires","explicit --apply; existing private parent owned by current user; destination absent; trusted prebuilt executables"),("rollback","explicit rollback PREFIX --apply; refuse modified or unexpected files")])]
+    plan_bins(prefix, source, &BINS)
+}
+pub fn plan_rtw88(prefix: &Path, source: &Path) -> Vec<Record> {
+    plan_bins(prefix, source, &RTW88_BINS)
+}
+fn plan_bins(prefix: &Path, source: &Path, bins: &[&str]) -> Vec<Record> {
+    let actions = if bins == &RTW88_BINS[..] {
+        "create new private prefix; copy only rfv-adapter-rtw88 userspace IPC adapter; write ownership manifest"
+    } else {
+        "create new private prefix; copy rfv, rfvd, rfv-adapter-rtw88; write ownership manifest"
+    };
+    vec![record(&[
+        ("kind", "installation_plan"),
+        ("prefix", &prefix.display().to_string()),
+        ("source", &source.display().to_string()),
+        ("actions", actions),
+        ("driver_changes", "none"),
+        ("network_changes", "none"),
+        ("privilege_escalation", "none"),
+        ("autostart", "none"),
+        (
+            "requires",
+            "explicit --apply; existing private parent owned by current user; destination absent; trusted prebuilt executables",
+        ),
+        (
+            "rollback",
+            "explicit rollback PREFIX --apply; refuse modified or unexpected files",
+        ),
+    ])]
 }
 pub fn install(prefix: &Path, source: &Path) -> io::Result<Vec<Record>> {
+    install_bins(prefix, source, &BINS)
+}
+pub fn install_rtw88(prefix: &Path, source: &Path) -> io::Result<Vec<Record>> {
+    install_bins(prefix, source, &RTW88_BINS)
+}
+fn install_bins(prefix: &Path, source: &Path, bins: &[&str]) -> io::Result<Vec<Record>> {
     private_parent(prefix)?;
     // Read all inputs before changing anything. No binaries are executed here.
     let mut inputs = Vec::new();
-    for name in BINS {
+    for &name in bins {
         inputs.push((name, read_binary(&source.join(name))?));
     }
     fs::DirBuilder::new().mode(0o700).create(prefix)?; // create_new directory: no replacement
@@ -58,6 +93,7 @@ pub fn install(prefix: &Path, source: &Path) -> io::Result<Vec<Record>> {
     let result = (|| {
         let mut manifest = String::from("RFV-INSTALL-1\n");
         for (name, bytes) in &inputs {
+            let name = *name;
             let path = prefix.join(name);
             let mut f = OpenOptions::new()
                 .write(true)
@@ -82,16 +118,18 @@ pub fn install(prefix: &Path, source: &Path) -> io::Result<Vec<Record>> {
         created.push(path);
         f.write_all(manifest.as_bytes())?;
         f.sync_all()?;
+        let note = if bins == &RTW88_BINS[..] {
+            "start the userspace rtw88 IPC adapter explicitly; no system Wi-Fi driver changed"
+        } else {
+            "start adapter and core explicitly using separate private runtime directory"
+        };
         Ok(vec![record(&[
             ("kind", "installation"),
             ("status", "installed"),
             ("prefix", &prefix.display().to_string()),
             ("running", "false"),
             ("driver_changes", "none"),
-            (
-                "note",
-                "start adapter and core explicitly using separate private runtime directory",
-            ),
+            ("note", note),
         ])])
     })();
     if result.is_err() {
@@ -109,14 +147,15 @@ pub fn rollback(prefix: &Path) -> io::Result<Vec<Record>> {
         .map(|e| e.map(|e| e.file_name().to_string_lossy().into_owned()))
         .collect::<io::Result<_>>()?;
     names.sort();
-    let mut expected = vec!["manifest.tsv".to_string()];
-    expected.extend(BINS.iter().map(|n| n.to_string()));
-    expected.sort();
-    if names != expected {
+    let bins = if names == install_names(&BINS) {
+        &BINS[..]
+    } else if names == install_names(&RTW88_BINS) {
+        &RTW88_BINS[..]
+    } else {
         return Err(io::Error::other(
             "rollback refused: unexpected/missing files; no changes made",
         ));
-    }
+    };
     let manifest_path = prefix.join("manifest.tsv");
     let m = fs::symlink_metadata(&manifest_path)?;
     if !m.is_file() || m.file_type().is_symlink() || m.len() > 4096 {
@@ -124,7 +163,7 @@ pub fn rollback(prefix: &Path) -> io::Result<Vec<Record>> {
     }
     let manifest = fs::read_to_string(&manifest_path)?;
     let mut recomputed = String::from("RFV-INSTALL-1\n");
-    for name in BINS {
+    for &name in bins {
         let data = read_binary(&prefix.join(name))?;
         recomputed.push_str(&format!(
             "{name}\t{}\t{:016x}\n",
@@ -138,7 +177,7 @@ pub fn rollback(prefix: &Path) -> io::Result<Vec<Record>> {
         ));
     }
     // Only fixed allowlisted names are removed. Never recursively delete a prefix.
-    for name in BINS {
+    for &name in bins {
         fs::remove_file(prefix.join(name))?;
     }
     fs::remove_file(manifest_path)?;
@@ -149,6 +188,12 @@ pub fn rollback(prefix: &Path) -> io::Result<Vec<Record>> {
         ("driver_changes", "none"),
         ("note", "running processes must be stopped separately"),
     ])])
+}
+fn install_names(bins: &[&str]) -> Vec<String> {
+    let mut names = vec!["manifest.tsv".to_string()];
+    names.extend(bins.iter().map(|n| n.to_string()));
+    names.sort();
+    names
 }
 #[cfg(test)]
 mod tests {

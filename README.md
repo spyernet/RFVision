@@ -22,8 +22,11 @@ Rust. For live RF queries, install your distribution's `iw` and `ethtool`
 separately. They are optional at runtime: missing tools produce diagnostics,
 not invented values. Some kernels restrict station/survey queries; no privilege
 escalation or file capabilities are added automatically.
+The root `./build.sh` builds the release wizard, core service and bundled
+userspace `rtw88` IPC adapter into `target/release/`.
 
 ```sh
+./build.sh
 cargo build --workspace --release --offline
 cargo test --workspace --offline
 cargo build --workspace --offline
@@ -81,6 +84,18 @@ prefix. It does not start services, invoke a package manager, modify firmware,
 load modules, create monitor interfaces, change channels, or touch NetworkManager.
 Rollback refuses changed files or unexpected content. See
 [the wizard specification](INSTALLATION_WIZARD.md) for limitations.
+
+To install only the bundled `rtw88` IPC adapter, use a different new prefix:
+
+```sh
+./target/release/rfv wizard plan-rtw88 "$HOME/.rfv-local/rtw88-adapter" "$PWD/target/release"
+./target/release/rfv wizard install-rtw88 "$HOME/.rfv-local/rtw88-adapter" "$PWD/target/release" --apply
+```
+
+This copies only the `rfv-adapter-rtw88` userspace executable. It is not the
+Linux `rtw88` kernel driver and does not install, load, replace, or modify any
+system Wi-Fi driver. The install requires explicit `--apply`, creates a new
+user-owned private prefix, and is reversible with the rollback command above.
 
 ## What can be measured?
 

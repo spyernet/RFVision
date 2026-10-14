@@ -85,3 +85,17 @@ transport, lifecycle/ownership design, overflow counters and benchmarks.
 Future `iwlwifi`, `ath9k`, `ath10k`, `ath11k`, `mt76` adapters are research targets,
 not compatibility promises. New adapters may implement the current IPC contract
 without modifying the Core, provided they use its measurement record semantics.
+
+## RF research workspace integration
+
+HAL adds standard read-only BSS-cache/power parsers and an evidence-scoped CSI
+provider contract. The existing rtw88 userspace adapter emits generic records;
+the GPL/dual-licensed source input is unchanged and not linked or copied.
+`rfv-ipc::measurement` owns shared scalar validation. Core adds driver-independent
+link-budget, coverage, optimizer, range-assessment, session and offline CSI
+modules. `rfvd` serializes bounded session processing; it still has no HAL/driver
+implementation dependency. The `rfv` presentation/wizard binary now depends on
+Core for offline tools, recording/replay and the embedded authenticated dashboard.
+The dashboard queries its own origin; the gateway calls existing Unix IPC.
+No new service privilege, driver install or automatic radio configuration path
+was introduced. Offline RFVCSI imports are not a live adapter data path.

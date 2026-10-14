@@ -7,6 +7,7 @@ publish = false
 license-file = "../../LICENSE"
 
 [dependencies]
+rfv-core = { path = "../core" }
 rfv-ipc = { path = "../ipc" }
 rfv-hal = { path = "../hal" }
 

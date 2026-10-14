@@ -1,18 +1,23 @@
 # RFVision · RFV
 
-**Passive, capability-aware Linux Wi-Fi diagnostics — Rust userspace foundation, v0.1.**
+**Passive Linux RF measurement, coverage and CSI research workspace — v0.1.**
 
 RFVision keeps normal Wi-Fi operation separate from RF measurement processing.
 It uses an independent `rtw88` adapter process and documented IPC, not linked
 Linux driver implementation code. The supplied driver is an **unchanged research
 input**, not something the installer builds or replaces.
 
-> **Honest scope:** working discovery, service/adapter IPC, conditional passive
-> measurements, capability reports and reversible user-local installation.
-> **No CSI acquisition has been demonstrated on RTL8821CE.** There is no CSI
-> capture, RF reconstruction, medical imaging, firmware patch, transmit-power
-> enhancement or driver replacement in this release. Actual RTL8821CE validation
-> remains pending; the development sandbox has no Wi-Fi device.
+> **Implemented:** passive diagnostics, provenance-aware link budgets, measured-point
+> coverage/history, RF Link Optimizer, cached-network discovery, guided multi-node
+> planning, private recordings/replay, offline complex-CSI analysis and a nine-page
+> read-only dashboard. **RTL8821CE live CSI remains unavailable.** No firmware
+> patching, power-limit bypass, monitor creation or driver replacement is included.
+> Algorithm/parser tests are not RF validation; the sandbox has no Wi-Fi device.
+
+See the [RF workspace guide](docs/rf/WORKSPACE.md),
+[CSI interchange/analysis contract](docs/rf/CSI_FORMAT.md) and
+[hardware validation report](docs/rf/HARDWARE_VALIDATION.md) for exact scope,
+limitations and a procedure for your RTL8821CE/Arch Linux host.
 
 ## Build
 
@@ -31,6 +36,7 @@ cargo build --workspace --release --offline
 cargo test --workspace --offline
 cargo build --workspace --offline
 python3 tests/integration/test_platform.py
+python3 tests/integration/test_rf_workspace.py
 python3 tools/audit_source.py --check
 ```
 
@@ -68,6 +74,38 @@ Stop servers with Ctrl-C. Signals currently leave socket files behind. After
 confirming both servers have stopped, remove **only** their stale socket files
 before restarting. The servers intentionally never unlink an existing path.
 
+## RF workspace commands
+
+With adapter/core running, open the embedded dashboard:
+
+```sh
+export RFV_UI_TOKEN="$(python3 -c 'import secrets; print(secrets.token_hex(24))')"
+printf '%s\n' "$RFV_UI_TOKEN"  # paste into the dashboard token field; keep private
+./target/release/rfv ui "$HOME/.rfv-run/core.sock" wlan0 8080
+```
+
+Open port 8080 locally or through a trusted HTTPS proxy. The server binds all
+interfaces; firewall it appropriately. APIs require the token, which is never
+embedded in the public page. Live Monitor · CSI Research · RF Coverage · Link
+Budget · RF Optimizer · Range Extenders · Hardware · Diagnostics · Recordings.
+All calculations/queries are read-only with respect to networking equipment.
+
+```sh
+./target/release/rfv budget inputs.tsv
+./target/release/rfv range nodes.tsv
+./target/release/rfv csi analyze capture.tsv
+./target/release/rfv record "$HOME/.rfv-run/core.sock" wlan0 desk.rfv 30 1000 \
+  ground-floor desk 2.0 3.0 tape-measure
+./target/release/rfv replay desk.rfv
+./target/release/rfv coverage desk.rfv
+```
+
+These input files are supplied by you, not generated example measurements.
+The [workspace guide](docs/rf/WORKSPACE.md) specifies TSV fields, input provenance,
+regulatory limitations and recording formats. Positions are explicit user records;
+without them, displays are unlocated histories. Link-budget output is always a
+prediction, never measured RSSI. CSI imports do not certify hardware support.
+
 ## Safe installation wizard
 
 ```sh
@@ -102,12 +140,14 @@ user-owned private prefix, and is reversible with the rollback command above.
 | Path | v0.1 behavior |
 |---|---|
 | sysfs | Netdev packet/byte/error/drop counters; identity, PCI/USB IDs, driver/module, state |
-| `iw dev … info` | Current channel frequency and recognized contiguous channel width |
+| `iw dev … info` | Current channel/frequency/contiguous width and configured TX power (not radiated power) |
 | `iw dev … station dump` | RSSI, average/chain RSSI, counters, retry/failure counts, bitrates, explicit MCS/NSS **when present** |
 | `iw dev … survey dump` | Noise and channel timing **if the driver exposes them** |
-| `iw phy … info` | Raw bounded driver-advertised PHY capabilities, not normalized physical verification |
+| `iw phy … info` | Bounded PHY advertisement and per-channel advertised power ceiling/constraints; minimum unknown |
+| `iw dev … scan dump` | Existing BSS cache only, measured cached signal/frequency/age when present; no triggered scan |
 | `ethtool -i …` | Driver and firmware version, when provided |
-| CSI / EVM / CFO / calibrated phase | Not acquired; research status and limitations reported |
+| Live CSI / EVM / CFO / calibrated phase | Not acquired; research status and limitations reported |
+| Offline CSI import | Validated complex data, amplitude/phase, detrending, temporal features; explicit simulation/unverified-import labels |
 
 No register/debugfs writes, active scans, monitor capture or radio configuration
 commands exist in the acquisition path. No SNR is invented by combining unrelated

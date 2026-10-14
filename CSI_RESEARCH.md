@@ -2,7 +2,12 @@
 
 ## Conclusion
 
-**CSI: UNVERIFIED. Live acquisition: NOT IMPLEMENTED.** Source inspection found
+**Physical CSI support: UNVERIFIED. RTL8821CE live acquisition: UNAVAILABLE.**
+The new detector uses `CSI_DRIVER_LIMITED` **only for RFVision's standard
+userspace acquisition path** on matching RTL8821CE/rtw88 identities. This does
+not prove the silicon lacks CSI, that a driver patch would suffice, or that
+firmware modification is required. The legacy generic capability stays UNVERIFIED.
+ Source inspection found
 no documented route exporting raw per-subcarrier complex channel estimates
 through the supplied RTL8821C RX path or examined C2H handlers. This is not proof
 that the silicon cannot form channel estimates internally. It is also not proof
@@ -89,3 +94,31 @@ wired to a device or IPC capture opcode. Tests use explicitly synthetic complex
 numbers and are not RF measurements. RSSI is never input to this conversion.
 CIR requires valid frequency-bin mapping and calibration/windowing assumptions;
 no IFFT-based CIR, phase reconstruction, imaging or synchronization is claimed.
+
+## Integrated research workspace update
+
+The source observations above were rechecked against the unchanged supplied tree.
+No additional safe register interface or genuine RTL8821CE capture was obtained.
+The installed kernel reported by the user is not assumed to equal that tree.
+No current web/vendor firmware audit or live radio test is claimed by this update.
+
+[RFVCSI/1](docs/rf/CSI_FORMAT.md) now provides bounded offline parsing/replay,
+complex validation, amplitude and phase, per-stream phase unwrap/detrending,
+external phase-offset correction API, amplitude temporal statistics/EMA,
+qualified difference-noise and spectral-selectivity proxies, and browser graphs.
+Fixtures are explicitly synthetic; imports are unverified provenance assertions.
+No scalar RSSI is turned into CSI, and no core/IPC live capture support is implied.
+The earlier basic-normalization description is superseded by this offline engine.
+CIR/multipath reconstruction, coherent complex static/dynamic separation,
+automatic calibration and high-rate acquisition remain unimplemented.
+
+### Additional hardware decision
+
+For actual CSI experiments now, investigate exact chip/firmware combinations
+supported by the already-pinned Nexmon CSI and Intel 5300 CSI Tool references.
+They require separate driver/firmware/kernel, capture-format, safety and license
+review; support is not transferable to RTL8821CE and no RFVision live adapter for
+them is implemented. Generic “OFDM” or “802.11ac” is not a purchasing criterion
+for exported CSI. Keep the existing RTL8821CE driver for scalar RF surveys; use
+independently validated research equipment for complex captures if required.
+See the [hardware validation report](docs/rf/HARDWARE_VALIDATION.md).

@@ -2,6 +2,7 @@
 #![forbid(unsafe_code)]
 use std::collections::BTreeMap;
 use std::io::{self, Read, Write};
+pub mod measurement;
 pub mod transport;
 
 pub type Record = BTreeMap<String, String>;

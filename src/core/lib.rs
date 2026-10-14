@@ -1,7 +1,13 @@
 //! Driver-independent validation, capability reconciliation and signal primitives.
 #![forbid(unsafe_code)]
 use rfv_ipc::{record, Record};
+pub mod coverage;
 pub mod csi;
+pub mod csi_capture;
+pub mod link_budget;
+pub mod optimizer;
+pub mod range;
+pub mod session;
 pub const STATUSES: &[&str] = &[
     "AVAILABLE",
     "AVAILABLE_WITH_ADAPTER",
@@ -18,21 +24,7 @@ pub fn process(mut rows: Vec<Record>) -> Result<Vec<Record>, String> {
     for r in &rows {
         match r.get("kind").map(String::as_str) {
             Some("measurement") => {
-                for key in [
-                    "interface",
-                    "device_id",
-                    "name",
-                    "value",
-                    "unit",
-                    "source",
-                    "observed_unix_ns",
-                    "time_basis",
-                    "quality",
-                ] {
-                    if r.get(key).is_none_or(|v| v.is_empty()) {
-                        return Err(format!("measurement missing {key}"));
-                    }
-                }
+                rfv_ipc::measurement::validate(r)?;
                 if matches!(
                     r["name"].as_str(),
                     "csi"
@@ -44,15 +36,6 @@ pub fn process(mut rows: Vec<Record>) -> Result<Vec<Record>, String> {
                         | "channel_impulse_response"
                 ) {
                     return Err("CSI requires a validated complex-data transport; scalar CSI is not supported".into());
-                }
-                let value = r["value"]
-                    .parse::<f64>()
-                    .map_err(|_| "non-numeric measurement")?;
-                if !value.is_finite() {
-                    return Err("non-finite measurement".into());
-                }
-                if r["observed_unix_ns"].parse::<u128>().is_err() {
-                    return Err("invalid observation timestamp".into());
                 }
                 if !rows.iter().any(|d| {
                     d.get("kind").map(String::as_str) == Some("device")
@@ -115,6 +98,7 @@ pub fn process(mut rows: Vec<Record>) -> Result<Vec<Record>, String> {
             );
         }
     }
+    rows.extend(optimizer::assess(&rows, None));
     rows.push(record(&[
         ("kind", "processing"),
         ("version", env!("CARGO_PKG_VERSION")),

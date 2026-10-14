@@ -26,6 +26,13 @@ absent. USB parent lookup is bounded to six ancestors.
 Required: `kind=measurement`, `interface`, `device_id`, `name`, `value`, `unit`,
 `source`, `observed_unix_ns`, `time_basis`, `quality`.
 
+New HAL producers also supply `source_driver`, `measurement_type=scalar`,
+`validity=valid`, `calibration=not_applied`, `capability_status=observed`.
+Optional `uncertainty` must be finite/nonnegative in the measurement unit; absence
+means unknown, not zero uncertainty. Configured TX power carries a configured
+basis, not a radiated-power claim. Existing RFV/1 clients without these additive
+fields remain readable; unknown/invalid validity is not promoted as a measurement.
+
 Optional: `peer` (station MAC), `chain_index` (position in iw's reported list,
 not a verified physical RF-chain mapping), `encoding`, `frequency_mhz`,
 `channel_in_use`. A sample record adds `sample_id`, `atomic=false`,
@@ -62,11 +69,12 @@ Fixed root-owned, non-group/world-writable executable locations for `iw` and
 iw dev IFACE info
 iw dev IFACE station dump
 iw dev IFACE survey dump
+iw dev IFACE scan dump   # existing cache, no scan trigger
 iw phy PHY info
 ethtool -i IFACE
 ```
 
-These are read queries; no scan, channel setter, txpower setter, register
+These are read queries; no scan trigger, channel setter, txpower setter, register
 access, monitor interface or privileged helper is invoked. Privilege failures,
 missing tools, timeout, absent fields and parser mismatches become diagnostics.
 The subprocess parser is deliberately conservative and **not a stable iw text
@@ -103,6 +111,43 @@ metadata. Layout is `[subcarrier][rx_chain][tx_stream]`.
 Validation rejects zero/oversized dimensions, unordered/duplicate bins,
 mismatched matrix length, invalid scaling and nonfinite IQ/amplitude. Amplitude
 and mathematical phase can be computed for **provided complex inputs**; zero
-IQ has no phase. No RSSI conversion, automatic calibration, unwrapping, time
-synchronization or CIR reconstruction exists. This Rust data contract is not
-currently carried over IPC; a future binary stream schema is required.
+IQ has no phase. No RSSI conversion, automatic RF calibration, time synchronization or CIR
+reconstruction exists. Unwrap/detrend and an explicit external phase-offset API
+are now provided, with limitations in [CSI_FORMAT](docs/rf/CSI_FORMAT.md).
+RFVCSI/1 is a bounded offline import contract; no live CSI IPC opcode is added.
+
+## CSI provider interface and scoped classification
+
+`rfv_hal::research::CsiAcquisition` separates a provider's evidence report from
+`acquire`; the standard provider returns `CSI_UNAVAILABLE`, never empty/fake IQ.
+`csi_assessment` has identity, driver, availability, hardware/firmware/driver
+support, scope, evidence, interfaces/debug/register-access limitations and next step.
+
+Vocabulary: `CSI_SUPPORTED` (verified complete export), `CSI_PARTIALLY_SUPPORTED`
+(verified complex export with explicit limitations), `CSI_DRIVER_LIMITED`
+(unavailable in the specified driver/userspace path), `CSI_FIRMWARE_LIMITED`
+(documented firmware restriction), `CSI_UNVERIFIED` (insufficient evidence),
+`CSI_UNSUPPORTED` (demonstrated unsupported in an explicit scope). A future
+provider must substantiate these classifications with validated samples.
+
+Matching RTL8821CE + rtw88 identities emit **CSI_DRIVER_LIMITED in RFVision's
+standard userspace path**, not a physical silicon verdict or proof a driver patch
+would suffice. Hardware/firmware remain unverified; installed source equivalence
+is not assumed. Other identities remain CSI_UNVERIFIED. Generic existing
+`capability.feature=csi` remains UNVERIFIED for backwards compatibility and
+never becomes AVAILABLE from scalar diagnostics.
+
+## Environment observations
+
+`network`: cached BSSID/SSID/signal/frequency/last-seen fields, source
+`iw.scan_cache`, host query time distinct from beacon reception. No missing age
+is replaced with zero and no role/compatibility is inferred.
+`power_limit`: frequency, optional advertised maximum dBm, unknown minimum,
+disabled/advertised state, exact raw constraints, observation time and source.
+No regulatory-rule merging or automatic permissible-setting computation occurs.
+
+Coverage uses the generic measurement contract plus optional explicit Position
+(reference, label, X/Y metres, position source). Core has no HAL dependency:
+shared scalar validation lives in `rfv-ipc::measurement`, and no kernel/driver
+struct is passed to the core. See [workspace](docs/rf/WORKSPACE.md) for processing
+and recording semantics.

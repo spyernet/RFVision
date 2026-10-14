@@ -8,3 +8,6 @@ __pycache__/
 *.pcap
 *.pcapng
 /.cache/
+
+# Private measurement recordings (keep JSON/CSI captures outside the repo too)
+*.rfv
